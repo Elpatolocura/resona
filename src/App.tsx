@@ -1,0 +1,49 @@
+import { useEffect } from 'react';
+import { HashRouter, Route, Routes, useLocation } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
+import HomePage from './pages/HomePage';
+import SearchPage from './pages/SearchPage';
+import LibraryPage from './pages/LibraryPage';
+import FavoritesPage from './pages/FavoritesPage';
+import PlaylistsPage from './pages/PlaylistsPage';
+import PlaylistDetailPage from './pages/PlaylistDetailPage';
+import AlbumPage from './pages/AlbumPage';
+import ArtistPage from './pages/ArtistPage';
+import MoviesPage from './pages/MoviesPage';
+import TvShowsPage from './pages/TvShowsPage';
+import MediaDetailPage from './pages/MediaDetailPage';
+import WatchPage from './pages/WatchPage';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const main = document.querySelector('main');
+    if (main) main.scrollTop = 0;
+  }, [pathname]);
+  return null;
+}
+
+export default function App() {
+  return (
+    <HashRouter>
+      <ScrollToTop />
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/library" element={<LibraryPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/playlists" element={<PlaylistsPage />} />
+          <Route path="/playlist/:id" element={<PlaylistDetailPage />} />
+          <Route path="/album/:id" element={<AlbumPage />} />
+          <Route path="/artist/:id" element={<ArtistPage />} />
+          <Route path="/movies" element={<MoviesPage />} />
+          <Route path="/tv" element={<TvShowsPage />} />
+          <Route path="/media/:kind/:id" element={<MediaDetailPage />} />
+          <Route path="/watch/:kind/:id" element={<WatchPage />} />
+          <Route path="*" element={<HomePage />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  );
+}
