@@ -16,6 +16,7 @@ import WatchPage from './pages/WatchPage';
 import ForumPage from './pages/ForumPage';
 import ForumThreadPage from './pages/ForumThreadPage';
 import PlayerPage from './pages/PlayerPage';
+import SettingsPage from './pages/SettingsPage';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/watch/:kind/:id" element={<WatchPage />} />
           <Route path="/forum" element={<ForumPage />} />
           <Route path="/forum/:id" element={<ForumThreadPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>
       </Routes>

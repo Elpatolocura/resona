@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Clapperboard, Heart, Home, Library, MessageSquare, Search, Tv } from 'lucide-react';
+import { Clapperboard, Heart, Home, Library, MessageSquare, Search, Settings, Tv } from 'lucide-react';
 import { cn } from '../utils/format';
 
 const NAV = [
@@ -10,6 +10,7 @@ const NAV = [
   { to: '/movies', label: 'Películas', icon: Clapperboard },
   { to: '/tv', label: 'Series', icon: Tv },
   { to: '/forum', label: 'Foro', icon: MessageSquare },
+  { to: '/settings', label: 'Config', icon: Settings },
 ];
 
 export default function MobileNav() {

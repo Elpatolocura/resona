@@ -11,6 +11,7 @@ import {
   Search,
   Disc3,
   Tv,
+  Settings,
 } from 'lucide-react';
 import { useLibraryStore } from '../store/libraryStore';
 import { cn } from '../utils/format';
@@ -23,6 +24,7 @@ const NAV = [
   { to: '/favorites', label: 'Favoritos', icon: Heart },
   { to: '/playlists', label: 'Playlists', icon: ListMusic },
   { to: '/forum', label: 'Foro', icon: MessageSquare },
+  { to: '/settings', label: 'Configuración', icon: Settings },
 ];
 
 const MEDIA_NAV = [
