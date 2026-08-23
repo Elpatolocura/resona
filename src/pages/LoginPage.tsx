@@ -140,9 +140,9 @@ export default function LoginPage() {
               className="text-sm text-muted transition hover:text-fuchsia-300"
             >
               {isLogin ? (
-                '¿No tienes cuenta? <span className="font-semibold text-fuchsia-300">Regístrate</span>'
+                <>¿No tienes cuenta? <span className="font-semibold text-fuchsia-300">Regístrate</span></>
               ) : (
-                '¿Ya tienes cuenta? <span className="font-semibold text-fuchsia-300">Inicia sesión</span>'
+                <>¿Ya tienes cuenta? <span className="font-semibold text-fuchsia-300">Inicia sesión</span></>
               )}
             </button>
           </div>
