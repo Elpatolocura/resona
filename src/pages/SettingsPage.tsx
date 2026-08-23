@@ -1,10 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings, User, Music2, Film, Tv, Bell, Moon, Sun, Volume2, Globe, Save, Trash2, LogOut } from 'lucide-react';
 import { cn } from '../utils/format';
 import { toast } from '../store/toastStore';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useTheme } from '../components/ThemeProvider';
 import { useLanguage, LANGUAGES, useT } from '../components/LanguageProvider';
+
+interface ContentSettings {
+  showMusic: boolean;
+  showMovies: boolean;
+  showSeries: boolean;
+  explicitContent: boolean;
+}
+
+const DEFAULT_CONTENT: ContentSettings = {
+  showMusic: true,
+  showMovies: true,
+  showSeries: true,
+  explicitContent: false,
+};
+
+function loadContentSettings(): ContentSettings {
+  try {
+    const saved = localStorage.getItem('resona_content');
+    return saved ? { ...DEFAULT_CONTENT, ...JSON.parse(saved) } : DEFAULT_CONTENT;
+  } catch {
+    return DEFAULT_CONTENT;
+  }
+}
+
+function saveContentSettings(settings: ContentSettings) {
+  localStorage.setItem('resona_content', JSON.stringify(settings));
+}
 
 interface SettingsSection {
   id: string;
@@ -29,6 +56,11 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
   const t = useT();
+  const [content, setContent] = useState<ContentSettings>(loadContentSettings);
+
+  useEffect(() => {
+    saveContentSettings(content);
+  }, [content]);
 
   const handleClearData = () => {
     localStorage.clear();
@@ -170,8 +202,17 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted">Mostrar contenido musical</p>
                     </div>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-brand transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" />
+                  <button
+                    onClick={() => setContent({ ...content, showMusic: !content.showMusic })}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      content.showMusic ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      content.showMusic ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
 
@@ -183,8 +224,17 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted">Mostrar películas en tendencia</p>
                     </div>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-brand transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" />
+                  <button
+                    onClick={() => setContent({ ...content, showMovies: !content.showMovies })}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      content.showMovies ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      content.showMovies ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
 
@@ -196,8 +246,17 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted">Mostrar series en tendencia</p>
                     </div>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-brand transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" />
+                  <button
+                    onClick={() => setContent({ ...content, showSeries: !content.showSeries })}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      content.showSeries ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      content.showSeries ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
 
@@ -205,10 +264,26 @@ export default function SettingsPage() {
                   <p className="mb-2 font-medium text-text">Contenido explícito</p>
                   <p className="mb-3 text-sm text-muted">Mostrar contenido con clasificación explícita</p>
                   <div className="flex gap-2">
-                    <button className="rounded-full border border-fuchsia-400/50 bg-brand/15 px-4 py-2 text-sm font-medium text-fuchsia-300">
+                    <button
+                      onClick={() => setContent({ ...content, explicitContent: true })}
+                      className={cn(
+                        'rounded-full border px-4 py-2 text-sm font-medium transition',
+                        content.explicitContent
+                          ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                          : 'border-line text-muted hover:text-text',
+                      )}
+                    >
                       Permitir
                     </button>
-                    <button className="rounded-full border border-line px-4 py-2 text-sm font-medium text-muted hover:text-text">
+                    <button
+                      onClick={() => setContent({ ...content, explicitContent: false })}
+                      className={cn(
+                        'rounded-full border px-4 py-2 text-sm font-medium transition',
+                        !content.explicitContent
+                          ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                          : 'border-line text-muted hover:text-text',
+                      )}
+                    >
                       No permitir
                     </button>
                   </div>
