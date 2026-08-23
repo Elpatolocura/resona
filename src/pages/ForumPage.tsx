@@ -518,7 +518,12 @@ export default function ForumPage() {
                   <input
                     type="text"
                     value={commentingOn === post.id ? newComment : ''}
-                    onFocus={() => setCommentingOn(post.id)}
+                    onFocus={() => {
+                      setCommentingOn(post.id);
+                      if (commentingOn && commentingOn !== post.id) {
+                        setNewComment('');
+                      }
+                    }}
                     onChange={(e) => {
                       setCommentingOn(post.id);
                       setNewComment(e.target.value);
@@ -529,15 +534,15 @@ export default function ForumPage() {
                         addComment(post.id);
                       }
                     }}
-                    placeholder={replyTo && replyTo.postId === post.id ? 'Escribe tu respuesta...' : 'Escribe un comentario...'}
-                    className="flex-1 rounded-full border border-line bg-surface/80 px-4 py-2 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                    placeholder="Escribe un comentario..."
+                    className="flex-1 rounded-full border border-line bg-surface/80 px-4 py-2.5 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40 focus:ring-1 focus:ring-fuchsia-400/30"
                   />
                   <button
                     onClick={() => addComment(post.id)}
                     disabled={!newComment.trim() || commentingOn !== post.id}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-white transition hover:opacity-90 disabled:opacity-30"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white transition hover:opacity-90 disabled:opacity-30"
                   >
-                    <Send className="h-3.5 w-3.5" />
+                    <Send className="h-4 w-4" />
                   </button>
                 </div>
               </div>
