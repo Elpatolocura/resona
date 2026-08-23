@@ -144,7 +144,7 @@ export default function Player() {
           <button
             onClick={() => setExpanded(true)}
             aria-label="Expandir reproductor"
-            className="hidden shrink-0 rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-fuchsia-300 lg:block"
+            className="shrink-0 rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-fuchsia-300"
           >
             <Maximize2 className="h-4 w-4" />
           </button>
