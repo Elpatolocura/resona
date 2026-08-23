@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, Heart, ListMusic, Music2, Pause, Play, SkipBack, SkipForward, Tv, X } from 'lucide-react';
+import { Film, Heart, ListMusic, Music2, Pause, Play, SkipBack, SkipForward, Tv, X, Volume2 } from 'lucide-react';
 import type { Media } from '../types';
 import { usePlayerStore } from '../store/playerStore';
 import { useLibraryStore } from '../store/libraryStore';
@@ -26,6 +26,7 @@ export default function Player() {
   const prev = usePlayerStore((s) => s.prev);
   const seek = usePlayerStore((s) => s.seek);
   const toggleQueue = usePlayerStore((s) => s.toggleQueue);
+  const [showMobileVolume, setShowMobileVolume] = useState(false);
 
   const favorites = useLibraryStore((s) => s.favorites);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
@@ -244,6 +245,20 @@ export default function Player() {
           >
             <SkipForward className="h-4.5 w-4.5 fill-current" />
           </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowMobileVolume(!showMobileVolume)}
+              aria-label="Volumen"
+              className="rounded-full p-1.5 text-text transition hover:text-fuchsia-300"
+            >
+              <Volume2 className="h-4.5 w-4.5" />
+            </button>
+            {showMobileVolume && (
+              <div className="absolute bottom-full right-0 mb-2 rounded-2xl border border-line bg-surface/95 p-3 backdrop-blur-xl shadow-xl">
+                <VolumeControl />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
