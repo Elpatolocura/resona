@@ -420,22 +420,20 @@ export default function ForumPage() {
                     <p className="mt-1.5 text-xs text-muted leading-relaxed whitespace-pre-line">{renderText(textPreview)}</p>
 
                     {post.images && post.images.length > 0 && (
-                      <div className="sm:hidden mt-2 flex gap-2 overflow-x-auto no-scrollbar">
-                        {post.images.slice(0, 3).map((img, i) => (
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {post.images.map((img, i) => (
                           <img
                             key={i}
                             src={img}
                             alt=""
-                            className="h-20 w-20 cursor-pointer rounded-lg object-cover transition hover:opacity-80 hover:ring-2 hover:ring-fuchsia-400/50"
+                            className={cn(
+                              'cursor-pointer rounded-xl object-cover transition hover:opacity-80 hover:ring-2 hover:ring-fuchsia-400/50',
+                              post.images!.length === 1 ? 'h-48 w-full' : 'h-32 w-full',
+                            )}
                             loading="lazy"
                             onClick={() => setFullscreenImage(img)}
                           />
                         ))}
-                        {post.images.length > 3 && (
-                          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-xs font-bold text-muted">
-                            +{post.images.length - 3}
-                          </div>
-                        )}
                       </div>
                     )}
 

@@ -307,13 +307,16 @@ export default function ForumThreadPage() {
             <p className="mt-4 text-sm leading-relaxed text-muted whitespace-pre-line">{renderText(currentPost.body)}</p>
 
             {currentPost.images && currentPost.images.length > 0 && (
-              <div className="mt-4 flex gap-3 overflow-x-auto no-scrollbar">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {currentPost.images.map((img, i) => (
                   <img
                     key={i}
                     src={img}
                     alt=""
-                    className="h-48 cursor-pointer rounded-2xl object-cover transition hover:opacity-80 hover:ring-2 hover:ring-fuchsia-400/50"
+                    className={cn(
+                      'cursor-pointer rounded-2xl object-cover transition hover:opacity-80 hover:ring-2 hover:ring-fuchsia-400/50',
+                      currentPost.images!.length === 1 ? 'h-64 w-full' : 'h-48 w-full',
+                    )}
                     loading="lazy"
                     onClick={() => setFullscreenImage(img)}
                   />
