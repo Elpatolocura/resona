@@ -1,37 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Settings, User, Music2, Film, Tv, Bell, Moon, Sun, Volume2, Globe, Save, Trash2, LogOut } from 'lucide-react';
 import { cn } from '../utils/format';
 import { toast } from '../store/toastStore';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useTheme } from '../components/ThemeProvider';
 import { useLanguage, LANGUAGES, useT } from '../components/LanguageProvider';
-
-interface ContentSettings {
-  showMusic: boolean;
-  showMovies: boolean;
-  showSeries: boolean;
-  explicitContent: boolean;
-}
-
-const DEFAULT_CONTENT: ContentSettings = {
-  showMusic: true,
-  showMovies: true,
-  showSeries: true,
-  explicitContent: false,
-};
-
-function loadContentSettings(): ContentSettings {
-  try {
-    const saved = localStorage.getItem('resona_content');
-    return saved ? { ...DEFAULT_CONTENT, ...JSON.parse(saved) } : DEFAULT_CONTENT;
-  } catch {
-    return DEFAULT_CONTENT;
-  }
-}
-
-function saveContentSettings(settings: ContentSettings) {
-  localStorage.setItem('resona_content', JSON.stringify(settings));
-}
+import { useContent } from '../components/ContentProvider';
 
 interface SettingsSection {
   id: string;
@@ -55,12 +29,8 @@ export default function SettingsPage() {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const { theme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
+  const { content, setContent } = useContent();
   const t = useT();
-  const [content, setContent] = useState<ContentSettings>(loadContentSettings);
-
-  useEffect(() => {
-    saveContentSettings(content);
-  }, [content]);
 
   const handleClearData = () => {
     localStorage.clear();
