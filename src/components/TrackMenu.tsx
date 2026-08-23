@@ -63,8 +63,9 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
       {open && (
         <div
           className={cn(
-            'absolute bottom-full z-50 mb-2 min-w-56 origin-bottom animate-fade-in rounded-2xl border border-line bg-surface-2 p-1.5 shadow-2xl shadow-black/60',
+            'absolute z-50 min-w-48 origin-top animate-fade-in rounded-xl border border-line bg-surface-2 p-1 shadow-2xl shadow-black/60',
             align === 'left' ? 'left-0' : 'right-0',
+            'bottom-full mb-2',
           )}
         >
           <button
@@ -81,7 +82,7 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
             }}
             className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-3"
           >
-            <Heart className={cn('h-4 w-4', isFav && 'fill-accent-2 text-accent-2')} />
+            <Heart className={cn('h-3.5 w-3.5', isFav && 'fill-accent-2 text-accent-2')} />
             {isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
           </button>
 
@@ -92,9 +93,9 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
               toast('Se reproducirá a continuación', 'info');
               setOpen(false);
             }}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-3"
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-text transition hover:bg-surface-3"
           >
-            <CornerDownRight className="h-4 w-4" />
+            <CornerDownRight className="h-3.5 w-3.5" />
             Reproducir a continuación
           </button>
 
@@ -105,13 +106,13 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
               toast('Añadido a la cola', 'info');
               setOpen(false);
             }}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-3"
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-text transition hover:bg-surface-3"
           >
-            <ListPlus className="h-4 w-4" />
+            <ListPlus className="h-3.5 w-3.5" />
             Añadir a la cola
           </button>
 
-          <div className="mx-3 my-1 h-px bg-line" />
+          <div className="mx-2 my-0.5 h-px bg-line" />
 
           {!showPlaylists ? (
             <button
@@ -119,15 +120,15 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
                 e.stopPropagation();
                 setShowPlaylists(true);
               }}
-              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-3"
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-text transition hover:bg-surface-3"
             >
-              <ListMusic className="h-4 w-4" />
+              <ListMusic className="h-3.5 w-3.5" />
               Añadir a playlist
             </button>
           ) : (
-            <div className="max-h-48 overflow-y-auto">
-              <div className="flex items-center justify-between px-3 py-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-faint">
+            <div className="max-h-32 overflow-y-auto">
+              <div className="flex items-center justify-between px-2 py-0.5">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
                   Playlists
                 </span>
                 <button
@@ -135,13 +136,13 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
                     e.stopPropagation();
                     setShowPlaylists(false);
                   }}
-                  className="rounded-full p-1 text-muted hover:bg-surface-3 hover:text-text"
+                  className="rounded-full p-0.5 text-muted hover:bg-surface-3 hover:text-text"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-3 w-3" />
                 </button>
               </div>
               {playlists.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-faint">
+                <p className="px-2 py-1.5 text-[10px] text-faint">
                   Crea una playlist en la sección Playlists.
                 </p>
               ) : (
@@ -152,7 +153,7 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
                       e.stopPropagation();
                       handlePlaylist(p.id);
                     }}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-3"
+                    className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1 text-left text-xs font-medium text-text transition hover:bg-surface-3"
                   >
                     <span className="truncate">{p.name}</span>
                   </button>
@@ -161,7 +162,7 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
             </div>
           )}
 
-          <div className="mx-3 my-1 h-px bg-line" />
+          <div className="mx-2 my-0.5 h-px bg-line" />
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -171,9 +172,9 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
               setOpen(false);
               setShowPlaylists(false);
             }}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-text transition hover:bg-surface-3"
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-text transition hover:bg-surface-3"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             Nueva playlist con esta canción
           </button>
         </div>
