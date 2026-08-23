@@ -258,21 +258,14 @@ export default function SettingsPage() {
               
               <div className="space-y-4">
                 <div className="rounded-xl border border-line p-4">
-                  <p className="mb-3 font-medium text-text">Tema</p>
-                  <div className="flex gap-3">
-                    <button className="flex items-center gap-2 rounded-xl border border-fuchsia-400/50 bg-brand/15 px-4 py-3">
+                  <p className="mb-3 font-medium text-text">Tema actual</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 rounded-xl border border-fuchsia-400/50 bg-brand/15 px-4 py-3">
                       <Moon className="h-4 w-4 text-fuchsia-300" />
-                      <span className="text-sm font-medium text-fuchsia-300">Oscuro</span>
-                    </button>
-                    <button className="flex items-center gap-2 rounded-xl border border-line px-4 py-3 text-muted hover:text-text">
-                      <Sun className="h-4 w-4" />
-                      <span className="text-sm font-medium">Claro</span>
-                    </button>
-                    <button className="flex items-center gap-2 rounded-xl border border-line px-4 py-3 text-muted hover:text-text">
-                      <Settings className="h-4 w-4" />
-                      <span className="text-sm font-medium">Sistema</span>
-                    </button>
+                      <span className="text-sm font-medium text-fuchsia-300">Oscuro (Sistema)</span>
+                    </div>
                   </div>
+                  <p className="mt-3 text-sm text-muted">El tema oscuro es el color oficial de la plataforma Resona.</p>
                 </div>
 
                 <div className="flex items-center justify-between rounded-xl border border-line p-4">
