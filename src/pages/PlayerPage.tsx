@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Film, Heart, Music2, Pause, Play, SkipBack, SkipForward, Tv, Sparkles } from 'lucide-react';
+import { ArrowLeft, Film, Heart, Music2, Pause, Play, SkipBack, SkipForward, Tv, Disc3, Clock, User } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { useLibraryStore } from '../store/libraryStore';
 import { useMediaStore } from '../store/mediaStore';
@@ -7,8 +8,19 @@ import { toast } from '../store/toastStore';
 import { formatTime, imageUrl } from '../utils/format';
 import { cn } from '../utils/format';
 import { mediaSubtitle } from '../utils/media';
+import { audius } from '../services/audius';
 import ProgressBar from '../components/ProgressBar';
 import VolumeControl from '../components/VolumeControl';
+import type { AudiusTrack } from '../types';
+
+type FilterType = 'all' | 'artist' | 'trending' | 'underground';
+
+const FILTERS: { id: FilterType; label: string; icon: typeof Disc3 }[] = [
+  { id: 'all', label: 'Todos', icon: Disc3 },
+  { id: 'artist', label: 'Mismo artista', icon: User },
+  { id: 'trending', label: 'Tendencia', icon: Music2 },
+  { id: 'underground', label: 'Underground', icon: Music2 },
+];
 
 export default function PlayerPage() {
   const navigate = useNavigate();
@@ -21,11 +33,65 @@ export default function PlayerPage() {
   const next = usePlayerStore((s) => s.next);
   const prev = usePlayerStore((s) => s.prev);
   const seek = usePlayerStore((s) => s.seek);
+  const playTrack = usePlayerStore((s) => s.playTrack);
 
   const favorites = useLibraryStore((s) => s.favorites);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
   const isVodFav = useMediaStore((s) => s.isVodFavorite(currentMedia?.id ?? ''));
   const toggleVodFavorite = useMediaStore((s) => s.toggleVodFavorite);
+
+  const [similarTracks, setSimilarTracks] = useState<AudiusTrack[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+
+  const currentTrack = currentMedia?.kind === 'music' ? currentMedia.track : null;
+
+  useEffect(() => {
+    if (!currentTrack) return;
+    
+    const fetchSimilar = async () => {
+      setLoadingSimilar(true);
+      try {
+        let tracks: AudiusTrack[] = [];
+        
+        switch (activeFilter) {
+          case 'artist':
+            if (currentTrack.user?.id) {
+              tracks = await audius.getUserTracks(currentTrack.user.id);
+              tracks = tracks.filter(t => t.id !== currentTrack.id);
+            }
+            break;
+          case 'trending':
+            tracks = await audius.trendingTracks('week');
+            tracks = tracks.filter(t => t.id !== currentTrack.id);
+            break;
+          case 'underground':
+            tracks = await audius.trendingUnderground();
+            tracks = tracks.filter(t => t.id !== currentTrack.id);
+            break;
+          default:
+            // Mix of artist tracks and trending
+            const [artistTracks, trendingTracks] = await Promise.all([
+              currentTrack.user?.id ? audius.getUserTracks(currentTrack.user.id) : Promise.resolve([]),
+              audius.trendingTracks('week'),
+            ]);
+            const filtered = artistTracks.filter(t => t.id !== currentTrack.id);
+            const trending = trendingTracks.filter(t => t.id !== currentTrack.id);
+            tracks = [...filtered.slice(0, 5), ...trending.slice(0, 10)];
+            break;
+        }
+        
+        setSimilarTracks(tracks.slice(0, 15));
+      } catch (err) {
+        console.error('Error fetching similar tracks:', err);
+        setSimilarTracks([]);
+      } finally {
+        setLoadingSimilar(false);
+      }
+    };
+
+    fetchSimilar();
+  }, [currentTrack?.id, activeFilter]);
 
   if (!currentMedia) {
     return (
@@ -96,7 +162,6 @@ export default function PlayerPage() {
 
         {/* Center content */}
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-8 w-full max-w-lg">
-          {/* Album Art / Poster */}
           {isVideo ? (
             <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-2xl shadow-2xl shadow-black/60">
               {art ? (
@@ -135,7 +200,6 @@ export default function PlayerPage() {
             </div>
           )}
 
-          {/* Song info */}
           <div className="text-center w-full px-4">
             <h1 className="text-xl font-bold text-white truncate drop-shadow-lg sm:text-2xl">{currentMedia.title}</h1>
             <p className="mt-2 text-sm text-white/60 truncate">{subtitle}</p>
@@ -144,7 +208,6 @@ export default function PlayerPage() {
 
         {/* Bottom controls */}
         <div className="relative z-10 w-full max-w-lg space-y-5">
-          {/* Progress bar */}
           <div className="flex items-center gap-3">
             <span className="w-10 text-right text-[11px] tabular-nums text-white/50">
               {formatTime(progress)}
@@ -155,7 +218,6 @@ export default function PlayerPage() {
             </span>
           </div>
 
-          {/* Main controls */}
           <div className="flex items-center justify-center gap-5">
             <button
               onClick={handleFavorite}
@@ -198,21 +260,106 @@ export default function PlayerPage() {
         </div>
       </div>
 
-      {/* Right side - Coming soon */}
-      <div className="hidden w-1/2 flex-col items-center justify-center border-l border-line bg-surface/30 p-8 xl:flex">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-fuchsia-500/10">
-            <Sparkles className="h-10 w-10 text-fuchsia-300/50" />
+      {/* Right side - Similar tracks */}
+      <div className="hidden w-1/2 flex-col border-l border-line bg-surface/30 xl:flex">
+        {/* Header */}
+        <div className="border-b border-line p-4">
+          <h2 className="text-lg font-bold text-text">Canciones similares</h2>
+          
+          {/* Filters */}
+          <div className="mt-3 flex gap-2">
+            {FILTERS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveFilter(id)}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all',
+                  activeFilter === id
+                    ? 'border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300'
+                    : 'border-line text-muted hover:border-fuchsia-400/30 hover:text-text',
+                )}
+              >
+                <Icon className="h-3 w-3" /> {label}
+              </button>
+            ))}
           </div>
-          <h3 className="text-lg font-bold text-text">Próximamente...</h3>
-          <p className="text-sm text-muted max-w-xs">
-            Aquí encontrarás letras sincronizadas, visualizadores de audio y mucho más.
-          </p>
-          <div className="mt-4 flex gap-2">
-            <span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs text-faint">🎵 Letras</span>
-            <span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs text-faint">🎨 Visualizer</span>
-            <span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs text-faint">📋 Cola</span>
-          </div>
+        </div>
+
+        {/* Track list */}
+        <div className="flex-1 overflow-y-auto p-2">
+          {loadingSimilar ? (
+            <div className="space-y-2 p-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-xl p-2">
+                  <div className="h-12 w-12 animate-pulse rounded-lg bg-surface-2" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-3/4 animate-pulse rounded bg-surface-2" />
+                    <div className="h-3 w-1/2 animate-pulse rounded bg-surface-2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : similarTracks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <Music2 className="h-12 w-12 text-fuchsia-300/30" />
+              <p className="mt-3 text-sm text-muted">No se encontraron canciones similares</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {similarTracks.map((track) => {
+                const trackArt = imageUrl(track.artwork, '150x150');
+                const isCurrentTrack = currentTrack?.id === track.id;
+                
+                return (
+                  <div
+                    key={track.id}
+                    onClick={() => playTrack(track)}
+                    className={cn(
+                      'group flex items-center gap-3 rounded-xl p-2 transition cursor-pointer',
+                      isCurrentTrack
+                        ? 'bg-fuchsia-500/15 border border-fuchsia-400/30'
+                        : 'hover:bg-surface-2 border border-transparent',
+                    )}
+                  >
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+                      {trackArt ? (
+                        <img src={trackArt} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-surface-3">
+                          <Music2 className="h-5 w-5 text-fuchsia-300/50" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+                        <Play className="h-5 w-5 fill-white text-white" />
+                      </div>
+                      {isCurrentTrack && isPlaying && (
+                        <div className="absolute bottom-1 right-1 flex gap-0.5">
+                          <div className="h-2 w-0.5 animate-pulse bg-fuchsia-400" />
+                          <div className="h-3 w-0.5 animate-pulse bg-fuchsia-400" style={{ animationDelay: '0.15s' }} />
+                          <div className="h-2 w-0.5 animate-pulse bg-fuchsia-400" style={{ animationDelay: '0.3s' }} />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="min-w-0 flex-1">
+                      <p className={cn(
+                        'truncate text-sm font-medium',
+                        isCurrentTrack ? 'text-fuchsia-300' : 'text-text',
+                      )}>
+                        {track.title}
+                      </p>
+                      <p className="truncate text-xs text-muted">{track.user?.name}</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-xs text-faint">
+                      <Clock className="h-3 w-3" />
+                      {formatTime(track.duration)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
