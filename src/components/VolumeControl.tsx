@@ -9,6 +9,7 @@ export default function VolumeControl() {
   const toggleMute = usePlayerStore((s) => s.toggleMute);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showSlider, setShowSlider] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     const input = inputRef.current;
@@ -18,12 +19,31 @@ export default function VolumeControl() {
     }
   }, [volume, muted]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const handleButtonClick = () => {
+    toggleMute();
+    setShowSlider(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setShowSlider(false), 3000);
+  };
+
+  const handleSliderChange = (value: number) => {
+    setVolume(value / 100);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setShowSlider(false), 2000);
+  };
+
   const Icon = muted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
     <div className="relative flex items-center">
       <button
-        onClick={() => setShowSlider(!showSlider)}
+        onClick={handleButtonClick}
         className="rounded-full p-1.5 text-muted transition hover:bg-surface-2 hover:text-text"
         aria-label={muted ? 'Activar sonido' : 'Silenciar'}
       >
@@ -36,7 +56,7 @@ export default function VolumeControl() {
           min={0}
           max={100}
           value={muted ? 0 : Math.round(volume * 100)}
-          onChange={(e) => setVolume(Number(e.target.value) / 100)}
+          onChange={(e) => handleSliderChange(Number(e.target.value))}
           className="absolute left-full ml-2 h-4 w-20 sm:w-24"
           aria-label="Volumen"
         />
