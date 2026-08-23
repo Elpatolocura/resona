@@ -156,8 +156,8 @@ export default function PlayerPage() {
           <div className="h-10 w-10" />
         </div>
 
-        {/* Center content - scrollable */}
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto w-full px-6 py-4">
+        {/* Center content */}
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-8 w-full px-6 py-4">
           {isVideo ? (
             <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-2xl shadow-2xl shadow-black/60">
               {art ? <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center bg-surface-3">{currentMedia.kind === 'movie' ? <Film className="h-16 w-16 text-fuchsia-300/50" /> : <Tv className="h-16 w-16 text-fuchsia-300/50" />}</div>}
