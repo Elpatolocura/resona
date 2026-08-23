@@ -4,6 +4,7 @@ import { ThemeProvider } from './components/ThemeProvider';
 import { LanguageProvider } from './components/LanguageProvider';
 import { ContentProvider } from './components/ContentProvider';
 import MainLayout from './layouts/MainLayout';
+import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
 import LibraryPage from './pages/LibraryPage';
@@ -37,9 +38,10 @@ export default function App() {
         <ContentProvider>
           <HashRouter>
             <ScrollToTop />
-            <Routes>
-              <Route path="/player" element={<PlayerPage />} />
-              <Route element={<MainLayout />}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/player" element={<PlayerPage />} />
+            <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/library" element={<LibraryPage />} />

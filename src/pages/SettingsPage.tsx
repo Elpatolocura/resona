@@ -6,6 +6,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { useTheme } from '../components/ThemeProvider';
 import { useLanguage, LANGUAGES, useT } from '../components/LanguageProvider';
 import { useContent } from '../components/ContentProvider';
+import { useAuthStore } from '../store/authStore';
 
 interface SettingsSection {
   id: string;
@@ -30,7 +31,56 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
   const { content, setContent } = useContent();
+  const { user, isAuthenticated } = useAuthStore();
   const t = useT();
+  
+  const [playerSettings, setPlayerSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('resona_player');
+      return saved ? JSON.parse(saved) : { autoPlay: true, autoMix: false, audioQuality: 'auto', defaultVolume: 80 };
+    } catch {
+      return { autoPlay: true, autoMix: false, audioQuality: 'auto', defaultVolume: 80 };
+    }
+  });
+
+  const [notificationSettings, setNotificationSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('resona_notifications');
+      return saved ? JSON.parse(saved) : { newSongs: true, movieUpdates: true, forumActivity: false };
+    } catch {
+      return { newSongs: true, movieUpdates: true, forumActivity: false };
+    }
+  });
+
+  const [appearanceSettings, setAppearanceSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('resona_appearance');
+      return saved ? JSON.parse(saved) : { animations: true, compact: false };
+    } catch {
+      return { animations: true, compact: false };
+    }
+  });
+
+  const updatePlayerSettings = (key: string, value: boolean | string | number) => {
+    const newSettings = { ...playerSettings, [key]: value };
+    setPlayerSettings(newSettings);
+    localStorage.setItem('resona_player', JSON.stringify(newSettings));
+    toast('Configuración guardada', 'success');
+  };
+
+  const updateNotificationSettings = (key: string, value: boolean) => {
+    const newSettings = { ...notificationSettings, [key]: value };
+    setNotificationSettings(newSettings);
+    localStorage.setItem('resona_notifications', JSON.stringify(newSettings));
+    toast('Configuración guardada', 'success');
+  };
+
+  const updateAppearanceSettings = (key: string, value: boolean) => {
+    const newSettings = { ...appearanceSettings, [key]: value };
+    setAppearanceSettings(newSettings);
+    localStorage.setItem('resona_appearance', JSON.stringify(newSettings));
+    toast('Configuración guardada', 'success');
+  };
 
   const handleClearData = () => {
     localStorage.clear();
@@ -81,22 +131,24 @@ export default function SettingsPage() {
               
               <div className="flex items-center gap-4">
                 <div className="h-20 w-20 rounded-full bg-gradient-to-br from-violet-600/40 to-fuchsia-600/40 flex items-center justify-center">
-                  <User className="h-10 w-10 text-white/60" />
+                  <span className="text-2xl font-bold text-white/80">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </span>
                 </div>
                 <div>
-                  <p className="font-semibold text-text">Usuario de Resona</p>
-                  <p className="text-sm text-muted">Miembro desde 2024</p>
+                  <p className="font-semibold text-text">{user?.name || 'Usuario'}</p>
+                  <p className="text-sm text-muted">{isAuthenticated ? 'Sesión activa' : 'No has iniciado sesión'}</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-text">Nombre de usuario</label>
-                  <input type="text" defaultValue="Usuario Resona" className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40" />
+                  <input type="text" defaultValue={user?.name || ''} className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40" />
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-text">Correo electrónico</label>
-                  <input type="email" defaultValue="usuario@resona.app" className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40" />
+                  <input type="email" defaultValue={user?.email || ''} className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40" />
                 </div>
               </div>
             </div>
@@ -113,8 +165,17 @@ export default function SettingsPage() {
                     <p className="font-medium text-text">Reproducción automática</p>
                     <p className="text-sm text-muted">Siguiente canción al finalizar</p>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-brand transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" />
+                  <button
+                    onClick={() => updatePlayerSettings('autoPlay', !playerSettings.autoPlay)}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      playerSettings.autoPlay ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      playerSettings.autoPlay ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
 
@@ -123,8 +184,17 @@ export default function SettingsPage() {
                     <p className="font-medium text-text">Mezcla automática</p>
                     <p className="text-sm text-muted">Transiciones suaves entre canciones</p>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-surface-3 transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-faint shadow transition-transform" />
+                  <button
+                    onClick={() => updatePlayerSettings('autoMix', !playerSettings.autoMix)}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      playerSettings.autoMix ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      playerSettings.autoMix ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
 
@@ -133,11 +203,15 @@ export default function SettingsPage() {
                     <p className="font-medium text-text">Calidad de audio</p>
                     <p className="text-sm text-muted">Mayor calidad consume más datos</p>
                   </div>
-                  <select className="rounded-xl border border-line bg-surface-2 px-3 py-1.5 text-sm text-text outline-none">
-                    <option>Automática</option>
-                    <option>Alta</option>
-                    <option>Media</option>
-                    <option>Baja</option>
+                  <select
+                    value={playerSettings.audioQuality}
+                    onChange={(e) => updatePlayerSettings('audioQuality', e.target.value)}
+                    className="rounded-xl border border-line bg-surface-2 px-3 py-1.5 text-sm text-text outline-none"
+                  >
+                    <option value="auto">Automática</option>
+                    <option value="high">Alta</option>
+                    <option value="medium">Media</option>
+                    <option value="low">Baja</option>
                   </select>
                 </div>
 
@@ -150,8 +224,15 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <input type="range" min="0" max="100" defaultValue="80" className="w-24 accent-fuchsia-500" />
-                    <span className="w-8 text-right text-sm text-muted">80%</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={playerSettings.defaultVolume}
+                      onChange={(e) => updatePlayerSettings('defaultVolume', parseInt(e.target.value))}
+                      className="w-24 accent-fuchsia-500"
+                    />
+                    <span className="w-8 text-right text-sm text-muted">{playerSettings.defaultVolume}%</span>
                   </div>
                 </div>
               </div>
@@ -273,8 +354,17 @@ export default function SettingsPage() {
                     <p className="font-medium text-text">Nuevas canciones</p>
                     <p className="text-sm text-muted">Cuando tus artistas favoritos publiquen</p>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-brand transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" />
+                  <button
+                    onClick={() => updateNotificationSettings('newSongs', !notificationSettings.newSongs)}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      notificationSettings.newSongs ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      notificationSettings.newSongs ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
 
@@ -283,8 +373,17 @@ export default function SettingsPage() {
                     <p className="font-medium text-text">Actualizaciones de películas</p>
                     <p className="text-sm text-muted">Nuevas películas disponibles</p>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-brand transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" />
+                  <button
+                    onClick={() => updateNotificationSettings('movieUpdates', !notificationSettings.movieUpdates)}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      notificationSettings.movieUpdates ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      notificationSettings.movieUpdates ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
 
@@ -293,8 +392,17 @@ export default function SettingsPage() {
                     <p className="font-medium text-text">Actividad del foro</p>
                     <p className="text-sm text-muted">Respuestas a tus publicaciones</p>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-surface-3 transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-faint shadow transition-transform" />
+                  <button
+                    onClick={() => updateNotificationSettings('forumActivity', !notificationSettings.forumActivity)}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      notificationSettings.forumActivity ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      notificationSettings.forumActivity ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
               </div>
@@ -349,8 +457,17 @@ export default function SettingsPage() {
                     <p className="font-medium text-text">Animaciones</p>
                     <p className="text-sm text-muted">Efectos visuales y transiciones</p>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-brand transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" />
+                  <button
+                    onClick={() => updateAppearanceSettings('animations', !appearanceSettings.animations)}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      appearanceSettings.animations ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      appearanceSettings.animations ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
 
@@ -359,8 +476,17 @@ export default function SettingsPage() {
                     <p className="font-medium text-text">Compacto</p>
                     <p className="text-sm text-muted">Mostrar más contenido en pantalla</p>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-surface-3 transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-faint shadow transition-transform" />
+                  <button
+                    onClick={() => updateAppearanceSettings('compact', !appearanceSettings.compact)}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      appearanceSettings.compact ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      appearanceSettings.compact ? 'left-5.5' : 'left-0.5',
+                    )} />
                   </button>
                 </div>
               </div>

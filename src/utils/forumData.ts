@@ -34,6 +34,38 @@ export const FORUM_CATEGORIES = [
 
 export const INITIAL_POSTS: ForumPost[] = [
   {
+    id: '103',
+    title: '📢 Actualización v2.6 - Login y configuración completa',
+    body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.5:
+
+📌 ANTES (v2.5):
+• No había sistema de inicio de sesión
+• La configuración no guardaba cambios
+• Los botones del menú no se deshabilitaban
+
+📌 AHORA (v2.6):
+✅ Página de inicio de sesión completa
+✅ Botón de "Iniciar sesión" en el sidebar
+✅ Cierre de sesión con confirmación
+✅ Configuración del reproductor funcional (autoplay, mezcla, calidad, volumen)
+✅ Configuración de notificaciones funcional
+✅ Configuración de apariencia funcional (animaciones, compacto)
+✅ Los botones se deshabilitan cuando el contenido está OFF
+✅ Todos los cambios se guardan en localStorage
+
+🎯 PRÓXIMAMENTE:
+• ecualizador visual
+• Notificaciones push
+• Modo offline`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1555421689-d68471e189f2?w=800&q=80'],
+    comments: [],
+  },
+  {
     id: '102',
     title: '📢 Actualización v2.5 - Multiidioma',
     body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.4:

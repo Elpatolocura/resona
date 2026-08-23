@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Clapperboard,
   Heart,
@@ -12,11 +12,15 @@ import {
   Disc3,
   Tv,
   Settings,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 import { useLibraryStore } from '../store/libraryStore';
 import { useContent } from './ContentProvider';
+import { useAuthStore } from '../store/authStore';
 import { cn } from '../utils/format';
 import CreatePlaylistModal from './CreatePlaylistModal';
+import ConfirmDialog from './ConfirmDialog';
 
 interface NavItem {
   to: string;
@@ -44,7 +48,10 @@ const MEDIA_NAV: NavItem[] = [
 export default function Sidebar() {
   const playlists = useLibraryStore((s) => s.playlists);
   const [createOpen, setCreateOpen] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
   const { content } = useContent();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const navigate = useNavigate();
 
   const isDisabled = (requires?: 'music' | 'movies' | 'series') => {
     if (!requires) return false;
@@ -162,17 +169,51 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      <div className="shrink-0 border-t border-line px-5 py-4">
-        <p className="text-[11px] leading-relaxed text-faint">
-          Resona · Música, películas y series.
-          <br />
-          Catálogo musical vía Audius.
-          <br />
-          Datos de películas y series proporcionados por TMDB.
-        </p>
+      <div className="shrink-0 border-t border-line px-4 py-4">
+        {isAuthenticated ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand/20 text-sm font-bold text-fuchsia-300">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-text">{user?.name}</p>
+                <p className="truncate text-xs text-faint">{user?.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowLogout(true)}
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted transition hover:bg-red-500/10 hover:text-red-300"
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar sesión
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => navigate('/login')}
+            className="flex w-full items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-[1.02] active:scale-95"
+          >
+            <LogIn className="h-4 w-4" />
+            Iniciar sesión
+          </button>
+        )}
       </div>
 
       <CreatePlaylistModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      
+      <ConfirmDialog
+        open={showLogout}
+        title="Cerrar sesión"
+        message="¿Estás seguro de que quieres cerrar sesión?"
+        confirmLabel="Cerrar sesión"
+        onClose={() => setShowLogout(false)}
+        onConfirm={() => {
+          logout();
+          setShowLogout(false);
+          navigate('/');
+        }}
+      />
     </aside>
   );
 }
