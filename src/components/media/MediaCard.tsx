@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, Play, Star, Trash2, Tv } from 'lucide-react';
+import { Play, Star, Trash2 } from 'lucide-react';
 import type { MediaVod } from '../../types';
 import { formatRating, vodMediaTypeLabel } from '../../utils/media';
 import { cn } from '../../utils/format';
+import ImageWithFallback from '../ImageWithFallback';
 
 interface MediaCardProps {
   media: MediaVod;
@@ -24,22 +25,12 @@ export default function MediaCard({ media, className, onRemove }: MediaCardProps
     >
       <Link to={`/media/${media.kind}/${media.tmdbId}`} className="block">
         <div className="relative aspect-[2/3] overflow-hidden rounded-xl">
-          {media.poster ? (
-            <img
-              src={media.poster}
-              alt={media.title}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-brand/20">
-              {isMovie ? (
-                <Film className="h-10 w-10 text-fuchsia-300/60" />
-              ) : (
-                <Tv className="h-10 w-10 text-fuchsia-300/60" />
-              )}
-            </div>
-          )}
+          <ImageWithFallback
+            src={media.poster}
+            alt={media.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fallbackType={media.kind === 'movie' ? 'movie' : 'tv'}
+          />
 
           <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 

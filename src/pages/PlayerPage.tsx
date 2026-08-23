@@ -14,6 +14,7 @@ import VolumeControl from '../components/VolumeControl';
 import QueuePanel from '../components/QueuePanel';
 import TrackMenu from '../components/TrackMenu';
 import Pagination from '../components/Pagination';
+import ImageWithFallback from '../components/ImageWithFallback';
 import type { AudiusTrack } from '../types';
 
 type FilterType = 'all' | 'artist' | 'trending' | 'underground';
@@ -165,12 +166,22 @@ export default function PlayerPage() {
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-8 w-full px-6 py-4">
           {isVideo ? (
             <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-2xl shadow-2xl shadow-black/60">
-              {art ? <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center bg-surface-3">{currentMedia.kind === 'movie' ? <Film className="h-16 w-16 text-fuchsia-300/50" /> : <Tv className="h-16 w-16 text-fuchsia-300/50" />}</div>}
+              <ImageWithFallback
+                src={art}
+                alt={currentMedia.title}
+                className="h-full w-full object-cover"
+                fallbackType={currentMedia.kind === 'movie' ? 'movie' : 'tv'}
+              />
             </div>
           ) : (
             <div className="relative">
               <div className={cn('h-56 w-56 overflow-hidden rounded-full shadow-2xl shadow-black/60 sm:h-64 sm:w-64', isPlaying && 'animate-[spin_20s_linear_infinite]')} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}>
-                {art ? <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand/40 to-surface-3"><Music2 className="h-20 w-20 text-fuchsia-300/50" /></div>}
+                <ImageWithFallback
+                  src={art}
+                  alt={currentMedia.title}
+                  className="h-full w-full object-cover"
+                  fallbackType="music"
+                />
               </div>
               <div className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface shadow-inner" />
               {isPlaying && <div className="absolute inset-0 rounded-full ring-2 ring-inset ring-fuchsia-400/30 animate-pulse" />}

@@ -6,6 +6,7 @@ import { mediaSubtitle } from '../utils/media';
 import type { Media } from '../types';
 import ConfirmDialog from './ConfirmDialog';
 import Pagination from './Pagination';
+import ImageWithFallback from './ImageWithFallback';
 import { useState } from 'react';
 
 const QUEUE_PER_PAGE = 8;
@@ -142,13 +143,12 @@ export default function QueuePanel({ className, onClose }: QueuePanelProps) {
                     )}
                   >
                     <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
-                      {art(media) ? (
-                        <img src={art(media) ?? undefined} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-surface-3">
-                          <Music2 className="h-4 w-4 text-fuchsia-300/50" />
-                        </div>
-                      )}
+                      <ImageWithFallback
+                        src={art(media)}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        fallbackType={media.kind === 'music' ? 'music' : media.kind === 'movie' ? 'movie' : 'tv'}
+                      />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
                         {isCurrent && isPlaying ? (
                           <Pause className="h-4 w-4 fill-white text-white" />

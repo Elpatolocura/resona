@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Music2 } from 'lucide-react';
 import type { AudiusTrack } from '../types';
 import { imageUrl, cn, isPlayable } from '../utils/format';
 import { usePlayerStore } from '../store/playerStore';
 import PlayButton from './PlayButton';
 import TrackMenu from './TrackMenu';
+import ImageWithFallback from './ImageWithFallback';
 
 interface SongCardProps {
   track: AudiusTrack;
@@ -25,18 +25,12 @@ export default function SongCard({ track, onPlay, className }: SongCardProps) {
       )}
     >
       <div className="relative aspect-square overflow-hidden rounded-xl">
-        {art ? (
-          <img
-            src={art}
-            alt={track.title}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-brand/20">
-            <Music2 className="h-10 w-10 text-fuchsia-300/60" />
-          </div>
-        )}
+        <ImageWithFallback
+          src={art}
+          alt={track.title}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          fallbackType="music"
+        />
         <div
           className={cn(
             'absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100',
