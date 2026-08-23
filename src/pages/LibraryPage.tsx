@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   BadgeCheck,
   Heart,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useLibraryStore } from '../store/libraryStore';
 import { useMediaStore } from '../store/mediaStore';
+import { INITIAL_POSTS } from '../utils/forumData';
 import { usePlayerStore } from '../store/playerStore';
 import { toast } from '../store/toastStore';
 import { useApi } from '../hooks/useApi';
@@ -280,6 +281,8 @@ export default function LibraryPage() {
         )}
       </div>
 
+      <ForumFavorites />
+
       <CreatePlaylistModal open={createOpen} onClose={() => setCreateOpen(false)} />
 
       <ConfirmDialog
@@ -309,6 +312,48 @@ function ArtistAvatar({ artist }: { artist: AudiusUser }) {
           <UserRound className="h-5 w-5 text-fuchsia-300/60" />
         </div>
       )}
+    </div>
+  );
+}
+
+function ForumFavorites() {
+  const forumFavorites = useMediaStore((s) => s.forumFavorites);
+  const navigate = useNavigate();
+
+  if (forumFavorites.length === 0) return null;
+
+  const favoritePosts = INITIAL_POSTS.filter((p: any) => forumFavorites.includes(p.id));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
+          <Heart className="h-5 w-5 text-fuchsia-300" /> Hilos guardados
+        </h2>
+        <span className="rounded-full bg-fuchsia-500/15 px-2.5 py-0.5 text-[11px] font-bold text-fuchsia-300">
+          {forumFavorites.length}
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {favoritePosts.map((post: any) => (
+          <div
+            key={post.id}
+            onClick={() => navigate(`/forum/${post.id}`)}
+            className="flex items-center gap-4 rounded-2xl border border-line bg-surface/60 p-3 transition-colors hover:bg-surface-2 cursor-pointer"
+          >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500/20">
+              <Heart className="h-6 w-6 text-fuchsia-300 fill-current" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-text">{post.title}</p>
+              <p className="truncate text-xs text-muted">
+                {post.author} · {post.category}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

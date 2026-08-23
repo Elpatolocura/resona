@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../utils/format';
 import { INITIAL_POSTS, type ForumPost, type ForumComment } from '../utils/forumData';
+import { useMediaStore } from '../store/mediaStore';
 
 const CATEGORIES = [
   { id: 'all', label: 'Todo', icon: MessagesSquare },
@@ -149,7 +150,6 @@ export default function ForumPage() {
   const [newLink, setNewLink] = useState('');
   const [newLinkLabel, setNewLinkLabel] = useState('');
   const [newLinks, setNewLinks] = useState<{ url: string; label: string }[]>([]);
-  const [favoritePosts, setFavoritePosts] = useState<Set<string>>(new Set());
   const [reportedPosts, setReportedPosts] = useState<Set<string>>(new Set());
   const [showReportModal, setShowReportModal] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
@@ -157,15 +157,12 @@ export default function ForumPage() {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const { forumFavorites, toggleForumFavorite } = useMediaStore();
+
   const filtered = activeCategory === 'all' ? posts : posts.filter((p) => p.category === activeCategory);
 
   const toggleFavorite = (postId: string) => {
-    setFavoritePosts((prev) => {
-      const next = new Set(prev);
-      if (next.has(postId)) next.delete(postId);
-      else next.add(postId);
-      return next;
-    });
+    toggleForumFavorite(postId);
   };
 
   const sharePost = async (post: ForumPost) => {
@@ -512,11 +509,11 @@ export default function ForumPage() {
                         onClick={() => toggleFavorite(post.id)}
                         className={cn(
                           'inline-flex items-center gap-1.5 text-xs font-medium transition-colors',
-                          favoritePosts.has(post.id) ? 'text-pink-400' : 'text-faint hover:text-pink-400',
+                          forumFavorites.includes(post.id) ? 'text-pink-400' : 'text-faint hover:text-pink-400',
                         )}
                       >
-                        <Heart className={cn('h-3.5 w-3.5', favoritePosts.has(post.id) && 'fill-current')} />
-                        {favoritePosts.has(post.id) ? 'Guardado' : 'Guardar'}
+                        <Heart className={cn('h-3.5 w-3.5', forumFavorites.includes(post.id) && 'fill-current')} />
+                        {forumFavorites.includes(post.id) ? 'Guardado' : 'Guardar'}
                       </button>
                       <button
                         onClick={() => sharePost(post)}

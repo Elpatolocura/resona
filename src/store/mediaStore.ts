@@ -18,6 +18,7 @@ interface MediaState {
   watchHistory: WatchHistoryEntry[];
   providers: EmbedProvider[];
   watchUrl: string | null;
+  forumFavorites: string[];
   fetchTrending: (kind: TmdbKind) => Promise<void>;
   search: (query: string) => Promise<void>;
   getDetails: (kind: TmdbKind, id: number) => Promise<MediaVod>;
@@ -29,6 +30,8 @@ interface MediaState {
   selectProvider: (url: string) => void;
   toggleVodFavorite: (vod: MediaVod) => void;
   isVodFavorite: (id: string) => boolean;
+  toggleForumFavorite: (postId: string) => void;
+  isForumFavorite: (postId: string) => boolean;
   addToHistory: (vod: MediaVod) => void;
   clearHistory: () => void;
 }
@@ -49,6 +52,7 @@ export const useMediaStore = create<MediaState>()(
       watchHistory: [],
       providers: [],
       watchUrl: null,
+      forumFavorites: [],
 
       fetchTrending: async (kind) => {
         set({ loading: true, error: null });
@@ -129,6 +133,18 @@ export const useMediaStore = create<MediaState>()(
 
       isVodFavorite: (id) => get().vodFavorites.some((f) => f.id === id),
 
+      toggleForumFavorite: (postId) =>
+        set((state) => {
+          const exists = state.forumFavorites.includes(postId);
+          return {
+            forumFavorites: exists
+              ? state.forumFavorites.filter((id) => id !== postId)
+              : [...state.forumFavorites, postId],
+          };
+        }),
+
+      isForumFavorite: (postId) => get().forumFavorites.includes(postId),
+
       addToHistory: (vod) =>
         set((state) => {
           const rest = state.watchHistory.filter((h) => h.media.id !== vod.id);
@@ -144,6 +160,7 @@ export const useMediaStore = create<MediaState>()(
       partialize: (state) => ({
         vodFavorites: state.vodFavorites,
         watchHistory: state.watchHistory,
+        forumFavorites: state.forumFavorites,
       }),
     },
   ),
