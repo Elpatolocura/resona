@@ -34,6 +34,38 @@ export const FORUM_CATEGORIES = [
 
 export const INITIAL_POSTS: ForumPost[] = [
   {
+    id: '100',
+    title: '📢 Actualización v2.3 - Cola de reproducción',
+    body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.2:
+
+📌 ANTES (v2.2):
+• Solo había cola de reproducción oculta en el reproductor
+• No se podía ver qué canciones estaban en la cola
+• No había forma de reorganizar la cola
+
+📌 AHORA (v2.3):
+✅ Cola de reproducción integrada en la página del reproductor
+✅ Pestaña "Cola de reproducción" junto a "Canciones similares"
+✅ Cola con lista de reproducción completa con highlights de la canción actual
+✅ Poder borrar canciones de la cola individually
+✅ Poder vaciar la cola completa
+✅ Reorganizar canciones con botones arriba/abajo
+✅ Acceso rápido desde el mini reproductor (botón de lista)
+
+🎯 PRÓXIMAMENTE:
+• ecualizador visual
+• Modo oscuro/claro
+• Notificaciones push
+• Modo offline`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80'],
+    comments: [],
+  },
+  {
     id: '0',
     title: '📢 Actualización v2.2 - Reproductor mejorado y paginación',
     body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.1:
