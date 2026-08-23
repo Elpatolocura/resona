@@ -503,48 +503,6 @@ export default function ForumPage() {
                   ))}
                 </div>
               )}
-
-              <div className="p-4 pt-3">
-                {replyTo && replyTo.postId === post.id && (
-                  <div className="mb-2 flex items-center gap-2 rounded-full bg-fuchsia-500/10 px-3 py-1.5 text-[11px] text-fuchsia-300">
-                    <Reply className="h-3 w-3" />
-                    Respondiendo a un comentario
-                    <button onClick={() => setReplyTo(null)} className="ml-auto hover:text-white">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
-                <div className="flex gap-2 items-center">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/20 text-[10px] font-bold text-fuchsia-300">
-                    T
-                  </div>
-                  <input
-                    type="text"
-                    value={commentingOn === post.id ? newComment : ''}
-                    onFocus={() => setCommentingOn(post.id)}
-                    onClick={() => setCommentingOn(post.id)}
-                    onChange={(e) => {
-                      setCommentingOn(post.id);
-                      setNewComment(e.target.value);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        addComment(post.id);
-                      }
-                    }}
-                    placeholder="Escribe un comentario..."
-                    className="flex-1 rounded-full border border-line bg-surface-2 px-4 py-2 text-xs text-text placeholder-faint outline-none transition-all focus:border-fuchsia-400/50 focus:bg-surface/80 focus:ring-2 focus:ring-fuchsia-400/20"
-                  />
-                  <button
-                    onClick={() => addComment(post.id)}
-                    disabled={!newComment.trim() || commentingOn !== post.id}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-md shadow-fuchsia-500/20 transition-all hover:scale-105 hover:opacity-90 disabled:opacity-20 disabled:shadow-none"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
             </div>
           );
         })}
