@@ -24,6 +24,7 @@ interface MediaState {
   getSimilar: (kind: TmdbKind, id: number) => Promise<void>;
   setSelectedSeason: (season: number) => void;
   setSelectedEpisode: (episode: number) => void;
+  removeFromHistory: (id: string) => void;
   loadProviders: (vod: MediaVod) => Promise<void>;
   selectProvider: (url: string) => void;
   toggleVodFavorite: (vod: MediaVod) => void;
@@ -108,6 +109,11 @@ export const useMediaStore = create<MediaState>()(
         const providers = await checkWorkingProviders(vod);
         set({ providers, watchUrl: providers[0]?.url ?? null });
       },
+
+      removeFromHistory: (id) =>
+        set((state) => ({
+          watchHistory: state.watchHistory.filter((h) => h.media.id !== id),
+        })),
 
       selectProvider: (url) => set({ watchUrl: url }),
 

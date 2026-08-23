@@ -1,0 +1,172 @@
+export interface ForumComment {
+  id: string;
+  author: string;
+  text: string;
+  date: string;
+  likes: number;
+  likedByMe: boolean;
+}
+
+export interface ForumPost {
+  id: string;
+  title: string;
+  body: string;
+  author: string;
+  category: string;
+  date: string;
+  likes: number;
+  likedByMe: boolean;
+  comments: ForumComment[];
+}
+
+export const FORUM_CATEGORIES = [
+  { id: 'all', label: 'Todo', icon: 'MessagesSquare' },
+  { id: 'movies', label: 'Películas', icon: 'Film' },
+  { id: 'tv', label: 'Series', icon: 'Tv' },
+  { id: 'music', label: 'Música', icon: 'Music' },
+  { id: 'general', label: 'General', icon: 'Flame' },
+];
+
+export const INITIAL_POSTS: ForumPost[] = [
+  {
+    id: '1',
+    title: 'Bienvenido a Resona - Reglas de la plataforma',
+    body: `¡Hola! Bienvenidos a Resona, tu plataforma de música, películas y series. Antes de comenzar, por favor lee las reglas:
+
+1. Respeta a los demás miembros del foro.
+2. No publicar contenido ofensivo, spam o publicidad no relacionada.
+3. Usa las categorías adecuadas para tus publicaciones (Películas, Series, Música, General).
+4. No publicar enlaces a sitios maliciosos.
+5. Disfruta del contenido y comparte con la comunidad.
+
+El incumplimiento de estas reglas puede resultar en la eliminación de tu cuenta.`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Hace 1 semana',
+    likes: 89,
+    likedByMe: false,
+    comments: [
+      { id: 'c1', author: 'Roka', text: '¡Excelente plataforma! Muy completa.', date: 'Hace 6 días', likes: 12, likedByMe: false },
+      { id: 'c2', author: 'Luna_M', text: 'Me encanta la sección de películas en español.', date: 'Hace 5 días', likes: 8, likedByMe: false },
+    ],
+  },
+  {
+    id: '2',
+    title: 'Guía: Cómo usar el reproductor de películas y series',
+    body: `Resona incluye un reproductor integrado para ver películas y series. Aquí te explicamos cómo usarlo:
+
+1. Ve a la sección de Películas o Series desde el menú lateral.
+2. Selecciona el contenido que quieras ver y haz click en "Ver".
+3. El reproductor cargará automáticamente con MultiEmbed como servidor principal.
+4. Si MultiEmbed no funciona, puedes cambiar de servidor usando el selector de la parte superior.
+5. Para series, puedes seleccionar temporada y episodio antes de reproducir.
+6. Tu progreso se guarda automáticamente en "Continuar viendo".
+
+¿Tienes dudas? Pregunta en los comentarios.`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Hace 5 días',
+    likes: 67,
+    likedByMe: false,
+    comments: [
+      { id: 'c3', author: 'Carlos_M', text: '¡Muy útil! No sabía que podía cambiar de servidor.', date: 'Hace 4 días', likes: 15, likedByMe: false },
+      { id: 'c4', author: 'PedroX', text: '¿Se puede guardar el progreso de una serie?', date: 'Hace 4 días', likes: 6, likedByMe: false },
+      { id: 'c5', author: 'Admin', text: '¡Sí! El progreso se guarda en "Continuar viendo" en la página de inicio.', date: 'Hace 3 días', likes: 20, likedByMe: false },
+    ],
+  },
+  {
+    id: '3',
+    title: 'Reglas del foro - Lee antes de publicar',
+    body: `Para mantener un foro ordenado y agradable, por favor sigue estas reglas:
+
+CATEGORÍAS:
+• Películas: Para discusiones sobre cine, recomendaciones y críticas.
+• Series: Para todo lo relacionado con series de televisión.
+• Música: Para hablar de canciones, artistas y álbumes.
+• General: Para temas que no encajan en las otras categorías.
+
+REGLAS:
+• Usa un título claro y descriptivo.
+• No publiques el mismo tema varias veces (duplicados).
+• Mantén los comentarios respetuosos.
+• No uses el foro para solicitar contenido ilegal.
+• Los posts de los admins son informativos - no los edites ni elimines.
+
+¡Gracias por colaborar!`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Hace 3 días',
+    likes: 56,
+    likedByMe: false,
+    comments: [
+      { id: 'c6', author: 'Ana_L', text: 'Perfecto, todo muy claro.', date: 'Hace 2 días', likes: 9, likedByMe: false },
+    ],
+  },
+  {
+    id: '4',
+    title: '¿Cómo agregar contenido a favoritos?',
+    body: `Resona te permite guardar tus canciones, películas y series favoritas. Aquí te explicamos cómo:
+
+MÚSICA:
+1. Busca la canción que te gusta.
+2. Haz click en el icono de corazón.
+3. Se guardará en tu sección de Favoritos.
+
+PELÍCULAS Y SERIES:
+1. Ve a la ficha de la película o serie.
+2. Haz click en el icono de corazón.
+3. Se guardará automáticamente.
+
+También puedes crear playlists para organizar tu música favorita:
+1. Ve a la sección de Playlists.
+2. Haz click en "+" para crear una nueva playlist.
+3. Añade canciones desde la búsqueda o desde la página de un artista.`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Hace 2 días',
+    likes: 43,
+    likedByMe: false,
+    comments: [],
+  },
+  {
+    id: '5',
+    title: 'Series coreanas: recomendaciones',
+    body: 'Acabo de terminar "Squid Game" y me dejó sin palabras. ¿Qué serie coreana me recomiendan para seguir?',
+    author: 'Ana_L',
+    category: 'tv',
+    date: 'Hace 5 horas',
+    likes: 18,
+    likedByMe: false,
+    comments: [
+      { id: 'c7', author: 'PedroX', text: '"All of Us Are Dead" es increíble, ¡mírala!', date: 'Hace 3 horas', likes: 7, likedByMe: false },
+      { id: 'c8', author: 'Luna_M', text: '"Parasite" también es muy buena, aunque es película.', date: 'Hace 2 horas', likes: 4, likedByMe: false },
+    ],
+  },
+  {
+    id: '6',
+    title: '¿Cuál es la mejor película española de los últimos años?',
+    body: 'Personalmente creo que "El secreto de sus ojos" o "Mar adentro" están en otro nivel. ¿Qué opinan?',
+    author: 'Carlos_M',
+    category: 'movies',
+    date: 'Hace 8 horas',
+    likes: 24,
+    likedByMe: false,
+    comments: [
+      { id: 'c9', author: 'Laura_S', text: '¡"El身躯padre no hay uno solo!" mejor película argentina', date: 'Hace 6 horas', likes: 5, likedByMe: false },
+      { id: 'c10', author: 'MiguelR', text: 'Para mí "El cuerpo" es la mejor thriller español.', date: 'Hace 4 horas', likes: 3, likedByMe: false },
+    ],
+  },
+  {
+    id: '7',
+    title: 'Conciertos en vivo que cambiaron la historia',
+    body: 'Hay conciertos que quedan grabados para siempre. ¿Cuál es el concierto en vivo que más les ha impactado?',
+    author: 'MusicFan99',
+    category: 'music',
+    date: 'Hace 1 día',
+    likes: 42,
+    likedByMe: false,
+    comments: [
+      { id: 'c11', author: 'Roka', text: 'Live Aid 1985, sin duda.', date: 'Hace 20 horas', likes: 18, likedByMe: false },
+    ],
+  },
+];

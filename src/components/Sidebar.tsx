@@ -6,6 +6,7 @@ import {
   Home,
   Library,
   ListMusic,
+  MessageSquare,
   Plus,
   Search,
   Disc3,
@@ -21,6 +22,7 @@ const NAV = [
   { to: '/library', label: 'Biblioteca', icon: Library },
   { to: '/favorites', label: 'Favoritos', icon: Heart },
   { to: '/playlists', label: 'Playlists', icon: ListMusic },
+  { to: '/forum', label: 'Foro', icon: MessageSquare },
 ];
 
 const MEDIA_NAV = [

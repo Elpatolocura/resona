@@ -79,6 +79,7 @@ export interface MediaVod {
   season?: number;
   episode?: number;
   certification?: string;
+  originalLanguage?: string;
 }
 
 export type Media = MusicMedia | MediaVod;

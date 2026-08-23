@@ -13,6 +13,8 @@ import MoviesPage from './pages/MoviesPage';
 import TvShowsPage from './pages/TvShowsPage';
 import MediaDetailPage from './pages/MediaDetailPage';
 import WatchPage from './pages/WatchPage';
+import ForumPage from './pages/ForumPage';
+import ForumThreadPage from './pages/ForumThreadPage';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -41,6 +43,8 @@ export default function App() {
           <Route path="/tv" element={<TvShowsPage />} />
           <Route path="/media/:kind/:id" element={<MediaDetailPage />} />
           <Route path="/watch/:kind/:id" element={<WatchPage />} />
+          <Route path="/forum" element={<ForumPage />} />
+          <Route path="/forum/:id" element={<ForumThreadPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>
       </Routes>

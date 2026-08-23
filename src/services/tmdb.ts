@@ -74,6 +74,7 @@ interface TmdbItem {
   release_date?: string;
   first_air_date?: string;
   genre_ids?: number[];
+  original_language?: string;
 }
 
 interface TmdbListResponse {
@@ -113,8 +114,11 @@ function normalizeItem(item: TmdbItem, kind: TmdbKind, genres?: Map<number, stri
     overview: item.overview || undefined,
     genres: genres ? genreIds.map((g) => genres.get(g)).filter(Boolean) as string[] : undefined,
     genreIds,
+    originalLanguage: item.original_language,
   };
 }
+
+const ALLOWED_LANGUAGES = new Set(['es']);
 
 function normalizeList(
   data: TmdbListResponse | null,
@@ -122,11 +126,13 @@ function normalizeList(
   genres?: Map<number, string>,
 ): MediaVod[] {
   return (data?.results ?? [])
-    .filter((item) =>
-      kind === 'multi'
-        ? item.media_type === 'movie' || item.media_type === 'tv'
-        : true,
-    )
+    .filter((item) => {
+      if (kind === 'multi') {
+        if (item.media_type !== 'movie' && item.media_type !== 'tv') return false;
+      }
+      if (item.original_language && !ALLOWED_LANGUAGES.has(item.original_language)) return false;
+      return true;
+    })
     .map((item) => normalizeItem(item, kind === 'multi' ? 'movie' : kind, genres));
 }
 
@@ -156,9 +162,30 @@ export const tmdb = {
     if (category === 'trending') path = `/trending/${kind}/week`;
     else if (category === 'popular') path = `/${kind}/popular`;
     else path = `/${kind}/top_rated`;
-    const data = await request<TmdbListResponse>(path);
+
     const genres = await getGenres(kind);
-    return normalizeList(data, kind, genres);
+    const seen = new Set<number>();
+    const results: MediaVod[] = [];
+
+    const pages = await Promise.all([
+      request<TmdbListResponse>(path, { with_original_language: 'es', page: 1 }),
+      request<TmdbListResponse>(path, { with_original_language: 'es', page: 2 }),
+      request<TmdbListResponse>(path, { with_original_language: 'es', page: 3 }),
+      request<TmdbListResponse>(path, { with_original_language: 'es', page: 4 }),
+      request<TmdbListResponse>(path, { with_original_language: 'es', page: 5 }),
+    ]);
+
+    for (const data of pages) {
+      for (const item of data.results ?? []) {
+        if (seen.has(item.id)) continue;
+        seen.add(item.id);
+        const normalized = normalizeItem(item, kind, genres);
+        if (normalized.originalLanguage && !ALLOWED_LANGUAGES.has(normalized.originalLanguage)) continue;
+        results.push(normalized);
+      }
+    }
+
+    return results;
   },
 
   async genres(kind: TmdbKind): Promise<GenreOption[]> {
@@ -175,6 +202,7 @@ export const tmdb = {
     const baseParams: Params = {
       sort_by: sortBy,
       include_adult: opts.adult ? 'true' : 'false',
+      with_original_language: 'es',
       ...(opts.category === 'top_rated' ? { 'vote_count.gte': 100 } : {}),
     };
 
@@ -225,6 +253,7 @@ export const tmdb = {
     const cast = (credits.cast ?? []).slice(0, 10).map((c) => c.name).filter(Boolean) as string[];
     const director = (credits.crew ?? []).find((c) => c.job === 'Director')?.name;
     const genreIds = (data.genres as Array<{ id: number }> | undefined)?.map((g) => g.id) ?? [];
+    const originalLanguage = data.original_language as string | undefined;
     return {
       kind,
       id: `${kind}:${id}`,
@@ -242,6 +271,7 @@ export const tmdb = {
       director,
       seasons: !isMovie ? (data.number_of_seasons as number | undefined) : undefined,
       status: (data.status as string | undefined),
+      originalLanguage,
     };
   },
 

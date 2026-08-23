@@ -30,7 +30,7 @@ export default function HomePage() {
   const artists: AudiusUser[] = uniqueBy(
     [...recommended, ...(underground.data ?? [])].map((t) => t.user).filter(Boolean),
     (u) => u.id,
-  ).slice(0, 12);
+  ).slice(0, 20);
 
   const playList = (tracks: AudiusTrack[]) => {
     if (tracks.length) usePlayerStore.getState().playFrom(tracks, 0);
@@ -161,12 +161,12 @@ export default function HomePage() {
         icon={Disc3}
       >
         {albums.loading ? (
-          <CardGridSkeleton count={8} />
+          <CardGridSkeleton count={12} />
         ) : albums.error ? (
           <ErrorState message={albums.error} onRetry={albums.refetch} compact />
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {(albums.data ?? []).slice(0, 12).map((album) => (
+            {(albums.data ?? []).slice(0, 18).map((album) => (
               <CollectionCard key={album.id} collection={album} kind="album" />
             ))}
           </div>
@@ -179,17 +179,46 @@ export default function HomePage() {
         icon={ListMusic}
       >
         {playlists.loading ? (
-          <CardGridSkeleton count={8} />
+          <CardGridSkeleton count={12} />
         ) : playlists.error ? (
           <ErrorState message={playlists.error} onRetry={playlists.refetch} compact />
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {(playlists.data ?? []).slice(0, 12).map((playlist) => (
+            {(playlists.data ?? []).slice(0, 18).map((playlist) => (
               <CollectionCard key={playlist.id} collection={playlist} kind="playlist" />
             ))}
           </div>
         )}
       </Section>
+
+      {underground.data && underground.data.length > 0 && (
+        <Section
+          title="Música underground"
+          subtitle="Descubre artistas emergentes"
+          icon={Sparkles}
+          action={
+            <button
+              onClick={() => playList(underground.data ?? [])}
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-1.5 text-xs font-bold text-white transition hover:opacity-90 active:scale-95"
+            >
+              <Play className="h-3.5 w-3.5 fill-current" /> Reproducir todas
+            </button>
+          }
+        >
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {(underground.data ?? []).map((track) => (
+              <SongCard
+                key={track.id}
+                track={track}
+                onPlay={(t) => {
+                  const idx = (underground.data ?? []).findIndex((x) => x.id === t.id);
+                  usePlayerStore.getState().playFrom(underground.data ?? [], Math.max(0, idx));
+                }}
+              />
+            ))}
+          </div>
+        </Section>
+      )}
     </div>
   );
 }

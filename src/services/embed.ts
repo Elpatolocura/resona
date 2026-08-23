@@ -15,6 +15,12 @@ interface ProviderTemplate {
 
 const TEMPLATES: ProviderTemplate[] = [
   {
+    id: 'multiembed',
+    name: 'MultiEmbed',
+    movie: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
+    tv: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
+  },
+  {
     id: 'vidsrc',
     name: 'VidSrc',
     movie: (id) => `https://vidsrc.to/embed/movie/${id}`,
@@ -31,12 +37,6 @@ const TEMPLATES: ProviderTemplate[] = [
     name: '2Embed',
     movie: (id) => `https://www.2embed.to/embed/tmdb/movie?id=${id}`,
     tv: (id, s, e) => `https://www.2embed.to/embed/tmdb/tv?id=${id}&s=${s}&e=${e}`,
-  },
-  {
-    id: 'multiembed',
-    name: 'MultiEmbed',
-    movie: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`,
-    tv: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
   },
   {
     id: 'embedflix',
