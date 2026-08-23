@@ -154,6 +154,7 @@ export default function ForumThreadPage() {
   const [reportDetails, setReportDetails] = useState('');
   const [copied, setCopied] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [userAvatar] = useState<string | null>(() => localStorage.getItem('resona_user_avatar'));
 
   const post = posts.find((p) => p.id === id);
 
@@ -274,13 +275,17 @@ export default function ForumThreadPage() {
 
       <div className="rounded-3xl border border-line bg-surface/70 p-6 sm:p-8">
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand/20 text-lg font-bold text-fuchsia-300">
-            {currentPost.author === 'Admin' ? (
+          {currentPost.author === 'Admin' ? (
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-fuchsia-500/30">
               <Shield className="h-6 w-6 text-fuchsia-300" />
-            ) : (
-              currentPost.author.charAt(0).toUpperCase()
-            )}
-          </div>
+            </div>
+          ) : userAvatar ? (
+            <img src={userAvatar} alt="" className="h-14 w-14 shrink-0 rounded-2xl object-cover" />
+          ) : (
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand/20 text-lg font-bold text-fuchsia-300">
+              T
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold', catColor(currentPost.category))}>

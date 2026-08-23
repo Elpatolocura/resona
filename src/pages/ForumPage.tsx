@@ -139,6 +139,8 @@ export default function ForumPage() {
   const [commentingOn, setCommentingOn] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<{ postId: string; commentId: string } | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [userAvatar, setUserAvatar] = useState<string | null>(() => localStorage.getItem('resona_user_avatar'));
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [newImages, setNewImages] = useState('');
   const [imageMode, setImageMode] = useState<'url' | 'file'>('url');
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -185,6 +187,20 @@ export default function ForumPage() {
     setShowReportModal(null);
     setReportReason('');
     setReportDetails('');
+  };
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      setUserAvatar(result);
+      localStorage.setItem('resona_user_avatar', result);
+      setShowAvatarModal(false);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -337,12 +353,25 @@ export default function ForumPage() {
             {posts.length} publicaciones
           </span>
         </div>
-        <button
-          onClick={() => setShowNewPost(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-fuchsia-500/25 transition hover:scale-[1.03] hover:opacity-90 active:scale-95"
-        >
-          <Plus className="h-4 w-4" /> Nueva publicación
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowAvatarModal(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface/80 transition hover:border-fuchsia-400/40 hover:bg-surface"
+            title="Cambiar foto de perfil"
+          >
+            {userAvatar ? (
+              <img src={userAvatar} alt="" className="h-8 w-8 rounded-full object-cover" />
+            ) : (
+              <span className="text-sm font-bold text-fuchsia-300">T</span>
+            )}
+          </button>
+          <button
+            onClick={() => setShowNewPost(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-fuchsia-500/25 transition hover:scale-[1.03] hover:opacity-90 active:scale-95"
+          >
+            <Plus className="h-4 w-4" /> Nueva publicación
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
@@ -399,12 +428,23 @@ export default function ForumPage() {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
+                      {post.author === 'Admin' ? (
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fuchsia-500/30">
+                          <Shield className="h-3 w-3 text-fuchsia-300" />
+                        </div>
+                      ) : userAvatar ? (
+                        <img src={userAvatar} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
+                      ) : (
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/30 text-[10px] font-bold text-fuchsia-300">
+                          T
+                        </div>
+                      )}
                       <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold', catColor(post.category))}>
                         {catIcon(post.category)} {CATEGORIES.find((c) => c.id === post.category)?.label}
                       </span>
                       {post.author === 'Admin' && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-500/20 px-2.5 py-0.5 text-[10px] font-bold text-fuchsia-300">
-                          <Shield className="h-2.5 w-2.5" /> Admin
+                          Admin
                         </span>
                       )}
                       <span className="text-[11px] text-faint">{post.date}</span>
@@ -795,6 +835,56 @@ export default function ForumPage() {
               >
                 Denunciar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAvatarModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-line bg-surface p-6 shadow-2xl shadow-black/40">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-text">Foto de perfil</h3>
+              <button onClick={() => setShowAvatarModal(false)} className="text-faint transition hover:text-text">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center gap-4">
+              {userAvatar ? (
+                <img src={userAvatar} alt="" className="h-24 w-24 rounded-full object-cover ring-4 ring-fuchsia-500/30" />
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-brand/30 text-3xl font-bold text-fuchsia-300">
+                  T
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+                id="avatar-upload"
+              />
+              <label
+                htmlFor="avatar-upload"
+                className="cursor-pointer rounded-full bg-fuchsia-500/20 px-6 py-2.5 text-sm font-semibold text-fuchsia-300 transition hover:bg-fuchsia-500/30"
+              >
+                📁 Subir imagen
+              </label>
+
+              {userAvatar && (
+                <button
+                  onClick={() => {
+                    setUserAvatar(null);
+                    localStorage.removeItem('resona_user_avatar');
+                    setShowAvatarModal(false);
+                  }}
+                  className="text-xs text-faint transition hover:text-red-400"
+                >
+                  Eliminar foto
+                </button>
+              )}
             </div>
           </div>
         </div>
