@@ -31,6 +31,7 @@ export default function App() {
     <HashRouter>
       <ScrollToTop />
       <Routes>
+        <Route path="/player" element={<PlayerPage />} />
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
@@ -46,7 +47,6 @@ export default function App() {
           <Route path="/watch/:kind/:id" element={<WatchPage />} />
           <Route path="/forum" element={<ForumPage />} />
           <Route path="/forum/:id" element={<ForumThreadPage />} />
-          <Route path="/player" element={<PlayerPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>
       </Routes>
