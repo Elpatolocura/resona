@@ -1,12 +1,12 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Settings, User, Music2, Film, Tv, Bell, Moon, Sun, Volume2, Globe, Save, Trash2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Settings, User, Music2, Film, Tv, Bell, Moon, Sun, Volume2, Globe, Save, Trash2, Sparkles, Check } from 'lucide-react';
 import { cn } from '../utils/format';
 import { toast } from '../store/toastStore';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useTheme } from '../components/ThemeProvider';
 import { useLanguage, LANGUAGES, useT } from '../components/LanguageProvider';
 import { useContent } from '../components/ContentProvider';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore, UserPreferences } from '../store/authStore';
 
 interface SettingsSection {
   id: string;
@@ -16,6 +16,7 @@ interface SettingsSection {
 
 const SECTIONS: SettingsSection[] = [
   { id: 'profile', label: 'Perfil', icon: User },
+  { id: 'preferences', label: 'Preferencias', icon: Sparkles },
   { id: 'player', label: 'Reproductor', icon: Music2 },
   { id: 'content', label: 'Contenido', icon: Film },
   { id: 'notifications', label: 'Notificaciones', icon: Bell },
@@ -23,6 +24,10 @@ const SECTIONS: SettingsSection[] = [
   { id: 'language', label: 'Idioma', icon: Globe },
   { id: 'storage', label: 'Almacenamiento', icon: Trash2 },
 ];
+
+const MUSIC_GENRES = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electrónica', 'Reggaetón', 'Salsa', 'Bachata', 'Indie', 'Clásica', 'Jazz', 'Metal', 'Country', 'Folk', 'K-Pop', 'Latin'];
+const MOVIE_GENRES = ['Acción', 'Comedia', 'Drama', 'Terror', 'Ciencia ficción', 'Romance', 'Animación', 'Thriller', 'Aventura', 'Fantasía', 'Documental', 'Musical', 'Crimen', 'Misterio'];
+const SERIES_GENRES = ['Drama', 'Comedia', 'Ciencia ficción', 'Crimen', 'Thriller', 'Fantasía', 'Romance', 'Documental', 'Acción', 'Animación', 'Horror', 'Reality', 'Anime', 'Medical'];
 
 interface PlayerSettings {
   autoPlay: boolean;
@@ -61,115 +66,150 @@ function shallowEqual(a: Record<string, unknown>, b: Record<string, unknown>): b
   return keysA.every((k) => a[k] === b[k]);
 }
 
+function arraysEqual(a: string[] = [], b: string[] = []): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((val, index) => val === b[index]);
+}
+
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('profile');
   const [showClearData, setShowClearData] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   const { theme, setTheme, persistTheme } = useTheme();
   const { language, setLanguage, persistLanguage } = useLanguage();
   const { content, setContent, persistContent } = useContent();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, setPreferences, updateProfile } = useAuthStore();
   const t = useT();
 
+  // Reference baselines (saved values)
   const savedThemeRef = useRef(theme);
   const savedLanguageRef = useRef(language);
   const savedContentRef = useRef(content);
-
-  const [playerSettings, setPlayerSettings] = useState<PlayerSettings>(() => loadJSON('resona_player', DEFAULT_PLAYER));
-  const savedPlayerRef = useRef<PlayerSettings>(playerSettings);
-
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => loadJSON('resona_notifications', DEFAULT_NOTIFICATIONS));
-  const savedNotificationsRef = useRef<NotificationSettings>(notificationSettings);
-
-  const [appearanceSettings, setAppearanceSettings] = useState<AppearanceSettings>(() => loadJSON('resona_appearance', DEFAULT_APPEARANCE));
-  const savedAppearanceRef = useRef<AppearanceSettings>(appearanceSettings);
-
-  const [profileName, setProfileName] = useState(user?.name || '');
-  const [profileEmail, setProfileEmail] = useState(user?.email || '');
   const savedProfileRef = useRef({ name: user?.name || '', email: user?.email || '' });
+  const savedPreferencesRef = useRef<UserPreferences>({
+    musicGenres: user?.preferences?.musicGenres || [],
+    movieGenres: user?.preferences?.movieGenres || [],
+    seriesGenres: user?.preferences?.seriesGenres || [],
+    language: user?.preferences?.language || language || 'system',
+    theme: user?.preferences?.theme || theme || 'dark',
+  });
 
-  const markDirty = useCallback(() => setHasChanges(true), []);
+  const [savedPlayer, setSavedPlayer] = useState<PlayerSettings>(() => loadJSON('resona_player', DEFAULT_PLAYER));
+  const [savedNotifications, setSavedNotifications] = useState<NotificationSettings>(() => loadJSON('resona_notifications', DEFAULT_NOTIFICATIONS));
+  const [savedAppearance, setSavedAppearance] = useState<AppearanceSettings>(() => loadJSON('resona_appearance', DEFAULT_APPEARANCE));
 
+  // Local draft states (edits remain in draft until user saves & confirms)
+  const [draftProfile, setDraftProfile] = useState({ name: user?.name || '', email: user?.email || '' });
+  const [draftTheme, setDraftTheme] = useState(theme);
+  const [draftLanguage, setDraftLanguage] = useState(language);
+  const [draftContent, setDraftContent] = useState(content);
+  const [draftPreferences, setDraftPreferences] = useState<UserPreferences>({
+    musicGenres: user?.preferences?.musicGenres || [],
+    movieGenres: user?.preferences?.movieGenres || [],
+    seriesGenres: user?.preferences?.seriesGenres || [],
+    language: user?.preferences?.language || language || 'system',
+    theme: user?.preferences?.theme || theme || 'dark',
+  });
+  const [draftPlayer, setDraftPlayer] = useState<PlayerSettings>(savedPlayer);
+  const [draftNotifications, setDraftNotifications] = useState<NotificationSettings>(savedNotifications);
+  const [draftAppearance, setDraftAppearance] = useState<AppearanceSettings>(savedAppearance);
+
+  // Sync draft profile/preferences when store user updates
   useEffect(() => {
-    if (activeSection === 'profile') {
-      const dirty = profileName !== savedProfileRef.current.name || profileEmail !== savedProfileRef.current.email;
-      setHasChanges(dirty);
-    }
-  }, [activeSection, profileName, profileEmail]);
+    if (user) {
+      const initialProfile = { name: user.name || '', email: user.email || '' };
+      setDraftProfile(initialProfile);
+      savedProfileRef.current = initialProfile;
 
+      if (user.preferences) {
+        const prefs: UserPreferences = {
+          musicGenres: user.preferences.musicGenres || [],
+          movieGenres: user.preferences.movieGenres || [],
+          seriesGenres: user.preferences.seriesGenres || [],
+          language: user.preferences.language || language || 'system',
+          theme: user.preferences.theme || theme || 'dark',
+        };
+        setDraftPreferences(prefs);
+        savedPreferencesRef.current = prefs;
+      }
+    }
+  }, [user]);
+
+  // Check if any draft state is dirty compared to saved baselines
   useEffect(() => {
-    if (activeSection === 'player') {
-      setHasChanges(!shallowEqual(playerSettings as unknown as Record<string, unknown>, savedPlayerRef.current as unknown as Record<string, unknown>));
-    }
-  }, [activeSection, playerSettings]);
+    const profileDirty =
+      draftProfile.name !== savedProfileRef.current.name ||
+      draftProfile.email !== savedProfileRef.current.email;
 
-  useEffect(() => {
-    if (activeSection === 'notifications') {
-      setHasChanges(!shallowEqual(notificationSettings as unknown as Record<string, unknown>, savedNotificationsRef.current as unknown as Record<string, unknown>));
-    }
-  }, [activeSection, notificationSettings]);
+    const themeDirty = draftTheme !== savedThemeRef.current;
+    const languageDirty = draftLanguage !== savedLanguageRef.current;
+    const contentDirty = !shallowEqual(draftContent as unknown as Record<string, unknown>, savedContentRef.current as unknown as Record<string, unknown>);
 
-  useEffect(() => {
-    if (activeSection === 'appearance') {
-      setHasChanges(!shallowEqual(appearanceSettings as unknown as Record<string, unknown>, savedAppearanceRef.current as unknown as Record<string, unknown>));
-    }
-  }, [activeSection, appearanceSettings]);
+    const prefsDirty =
+      !arraysEqual(draftPreferences.musicGenres, savedPreferencesRef.current.musicGenres) ||
+      !arraysEqual(draftPreferences.movieGenres, savedPreferencesRef.current.movieGenres) ||
+      !arraysEqual(draftPreferences.seriesGenres, savedPreferencesRef.current.seriesGenres) ||
+      draftPreferences.language !== savedPreferencesRef.current.language ||
+      draftPreferences.theme !== savedPreferencesRef.current.theme;
 
-  useEffect(() => {
-    if (activeSection === 'content') {
-      setHasChanges(!shallowEqual(content as unknown as Record<string, unknown>, savedContentRef.current as unknown as Record<string, unknown>));
-    }
-  }, [activeSection, content]);
+    const playerDirty = !shallowEqual(draftPlayer as unknown as Record<string, unknown>, savedPlayer as unknown as Record<string, unknown>);
+    const notificationsDirty = !shallowEqual(draftNotifications as unknown as Record<string, unknown>, savedNotifications as unknown as Record<string, unknown>);
+    const appearanceDirty = !shallowEqual(draftAppearance as unknown as Record<string, unknown>, savedAppearance as unknown as Record<string, unknown>);
 
-  useEffect(() => {
-    if (activeSection === 'appearance') {
-      setHasChanges(theme !== savedThemeRef.current);
-    }
-  }, [activeSection, theme]);
+    setHasChanges(profileDirty || themeDirty || languageDirty || contentDirty || prefsDirty || playerDirty || notificationsDirty || appearanceDirty);
+  }, [draftProfile, draftTheme, draftLanguage, draftContent, draftPreferences, draftPlayer, draftNotifications, draftAppearance, savedPlayer, savedNotifications, savedAppearance]);
 
-  useEffect(() => {
-    if (activeSection === 'language') {
-      setHasChanges(language !== savedLanguageRef.current);
-    }
-  }, [activeSection, language]);
+  const toggleGenre = (genre: string, key: 'musicGenres' | 'movieGenres' | 'seriesGenres') => {
+    const list = draftPreferences[key];
+    const updated = list.includes(genre) ? list.filter((g) => g !== genre) : [...list, genre];
+    setDraftPreferences((prev) => ({ ...prev, [key]: updated }));
+  };
 
-  useEffect(() => {
-    if (activeSection === 'player') {
-      setHasChanges(!shallowEqual(playerSettings as unknown as Record<string, unknown>, savedPlayerRef.current as unknown as Record<string, unknown>));
-    }
-  }, [activeSection, playerSettings]);
+  const handleSaveConfirmed = () => {
+    // Apply theme & language globally
+    setTheme(draftTheme as 'dark' | 'light' | 'system');
+    persistTheme();
+    savedThemeRef.current = draftTheme;
 
-  const handleSave = useCallback(() => {
-    if (activeSection === 'profile') {
-      savedProfileRef.current = { name: profileName, email: profileEmail };
-      toast('Perfil actualizado', 'success');
-    } else if (activeSection === 'player') {
-      localStorage.setItem('resona_player', JSON.stringify(playerSettings));
-      savedPlayerRef.current = { ...playerSettings };
-      toast('Configuración del reproductor guardada', 'success');
-    } else if (activeSection === 'content') {
-      persistContent();
-      savedContentRef.current = { ...content };
-      toast('Configuración de contenido guardada', 'success');
-    } else if (activeSection === 'notifications') {
-      localStorage.setItem('resona_notifications', JSON.stringify(notificationSettings));
-      savedNotificationsRef.current = { ...notificationSettings };
-      toast('Configuración de notificaciones guardada', 'success');
-    } else if (activeSection === 'appearance') {
-      persistTheme();
-      localStorage.setItem('resona_appearance', JSON.stringify(appearanceSettings));
-      savedAppearanceRef.current = { ...appearanceSettings };
-      savedThemeRef.current = theme;
-      toast('Apariencia guardada', 'success');
-    } else if (activeSection === 'language') {
-      persistLanguage();
-      savedLanguageRef.current = language;
-      toast('Idioma guardado', 'success');
-    }
+    setLanguage(draftLanguage as 'system' | 'es' | 'en' | 'pt' | 'fr');
+    persistLanguage();
+    savedLanguageRef.current = draftLanguage;
+
+    // Apply content settings globally
+    setContent(draftContent);
+    persistContent();
+    savedContentRef.current = { ...draftContent };
+
+    // Apply profile
+    updateProfile(draftProfile.name, draftProfile.email);
+    savedProfileRef.current = { ...draftProfile };
+
+    // Apply user preferences
+    const finalPrefs: UserPreferences = {
+      ...draftPreferences,
+      language: draftLanguage,
+      theme: draftTheme,
+    };
+    setPreferences(finalPrefs);
+    savedPreferencesRef.current = { ...finalPrefs };
+
+    // Save localStorage settings
+    localStorage.setItem('resona_player', JSON.stringify(draftPlayer));
+    setSavedPlayer({ ...draftPlayer });
+
+    localStorage.setItem('resona_notifications', JSON.stringify(draftNotifications));
+    setSavedNotifications({ ...draftNotifications });
+
+    localStorage.setItem('resona_appearance', JSON.stringify(draftAppearance));
+    setSavedAppearance({ ...draftAppearance });
+
+    setShowSaveConfirm(false);
     setHasChanges(false);
-  }, [activeSection, profileName, profileEmail, playerSettings, content, notificationSettings, appearanceSettings, theme, language, persistContent, persistTheme, persistLanguage]);
+    toast('¡Cambios guardados y aplicados exitosamente!', 'success');
+  };
 
   const handleClearData = () => {
     localStorage.clear();
@@ -185,7 +225,7 @@ export default function SettingsPage() {
   const SaveButton = () => (
     <div className="mt-6 flex justify-end border-t border-line pt-4">
       <button
-        onClick={handleSave}
+        onClick={() => setShowSaveConfirm(true)}
         disabled={!hasChanges}
         className={cn(
           'inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold shadow-lg transition',
@@ -239,11 +279,11 @@ export default function SettingsPage() {
               <div className="flex items-center gap-4">
                 <div className="h-20 w-20 rounded-full bg-gradient-to-br from-violet-600/40 to-fuchsia-600/40 flex items-center justify-center">
                   <span className="text-2xl font-bold text-white/80">
-                    {profileName?.charAt(0).toUpperCase() || 'U'}
+                    {draftProfile.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div>
-                  <p className="font-semibold text-text">{profileName || 'Usuario'}</p>
+                  <p className="font-semibold text-text">{draftProfile.name || 'Usuario'}</p>
                   <p className="text-sm text-muted">{isAuthenticated ? 'Sesión activa' : 'No has iniciado sesión'}</p>
                 </div>
               </div>
@@ -253,8 +293,8 @@ export default function SettingsPage() {
                   <label className="mb-1.5 block text-sm font-medium text-text">Nombre de usuario</label>
                   <input
                     type="text"
-                    value={profileName}
-                    onChange={(e) => { setProfileName(e.target.value); markDirty(); }}
+                    value={draftProfile.name}
+                    onChange={(e) => setDraftProfile((p) => ({ ...p, name: e.target.value }))}
                     className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40"
                   />
                 </div>
@@ -262,10 +302,108 @@ export default function SettingsPage() {
                   <label className="mb-1.5 block text-sm font-medium text-text">Correo electrónico</label>
                   <input
                     type="email"
-                    value={profileEmail}
-                    onChange={(e) => { setProfileEmail(e.target.value); markDirty(); }}
+                    value={draftProfile.email}
+                    onChange={(e) => setDraftProfile((p) => ({ ...p, email: e.target.value }))}
                     className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40"
                   />
+                </div>
+              </div>
+
+              <SaveButton />
+            </div>
+          )}
+
+          {/* Preferences */}
+          {activeSection === 'preferences' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-text">Mis Preferencias</h2>
+                <p className="mt-1 text-sm text-muted">Configura tus gustos de contenido registrados en tu cuenta</p>
+              </div>
+
+              <div className="space-y-6">
+                {/* Music Genres */}
+                <div className="rounded-xl border border-line p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Music2 className="h-5 w-5 text-fuchsia-300" />
+                    <h3 className="font-semibold text-text">Música Preferida</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {MUSIC_GENRES.map((genre) => {
+                      const selected = draftPreferences.musicGenres.includes(genre);
+                      return (
+                        <button
+                          key={genre}
+                          onClick={() => toggleGenre(genre, 'musicGenres')}
+                          className={cn(
+                            'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                            selected
+                              ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                              : 'border-line text-muted hover:text-text',
+                          )}
+                        >
+                          {selected && <Check className="h-3 w-3" />}
+                          {genre}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Movie Genres */}
+                <div className="rounded-xl border border-line p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Film className="h-5 w-5 text-blue-300" />
+                    <h3 className="font-semibold text-text">Películas Preferidas</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {MOVIE_GENRES.map((genre) => {
+                      const selected = draftPreferences.movieGenres.includes(genre);
+                      return (
+                        <button
+                          key={genre}
+                          onClick={() => toggleGenre(genre, 'movieGenres')}
+                          className={cn(
+                            'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                            selected
+                              ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                              : 'border-line text-muted hover:text-text',
+                          )}
+                        >
+                          {selected && <Check className="h-3 w-3" />}
+                          {genre}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Series Genres */}
+                <div className="rounded-xl border border-line p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Tv className="h-5 w-5 text-emerald-300" />
+                    <h3 className="font-semibold text-text">Series Preferidas</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {SERIES_GENRES.map((genre) => {
+                      const selected = draftPreferences.seriesGenres.includes(genre);
+                      return (
+                        <button
+                          key={genre}
+                          onClick={() => toggleGenre(genre, 'seriesGenres')}
+                          className={cn(
+                            'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                            selected
+                              ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                              : 'border-line text-muted hover:text-text',
+                          )}
+                        >
+                          {selected && <Check className="h-3 w-3" />}
+                          {genre}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -285,15 +423,15 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Siguiente canción al finalizar</p>
                   </div>
                   <button
-                    onClick={() => setPlayerSettings((s) => ({ ...s, autoPlay: !s.autoPlay }))}
+                    onClick={() => setDraftPlayer((s) => ({ ...s, autoPlay: !s.autoPlay }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      playerSettings.autoPlay ? 'bg-brand' : 'bg-surface-3',
+                      draftPlayer.autoPlay ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      playerSettings.autoPlay ? 'left-5.5' : 'left-0.5',
+                      draftPlayer.autoPlay ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -304,15 +442,15 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Transiciones suaves entre canciones</p>
                   </div>
                   <button
-                    onClick={() => setPlayerSettings((s) => ({ ...s, autoMix: !s.autoMix }))}
+                    onClick={() => setDraftPlayer((s) => ({ ...s, autoMix: !s.autoMix }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      playerSettings.autoMix ? 'bg-brand' : 'bg-surface-3',
+                      draftPlayer.autoMix ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      playerSettings.autoMix ? 'left-5.5' : 'left-0.5',
+                      draftPlayer.autoMix ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -323,8 +461,8 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Mayor calidad consume más datos</p>
                   </div>
                   <select
-                    value={playerSettings.audioQuality}
-                    onChange={(e) => setPlayerSettings((s) => ({ ...s, audioQuality: e.target.value }))}
+                    value={draftPlayer.audioQuality}
+                    onChange={(e) => setDraftPlayer((s) => ({ ...s, audioQuality: e.target.value }))}
                     className="rounded-xl border border-line bg-surface-2 px-3 py-1.5 text-sm text-text outline-none"
                   >
                     <option value="auto">Automática</option>
@@ -347,11 +485,11 @@ export default function SettingsPage() {
                       type="range"
                       min="0"
                       max="100"
-                      value={playerSettings.defaultVolume}
-                      onChange={(e) => setPlayerSettings((s) => ({ ...s, defaultVolume: parseInt(e.target.value) }))}
+                      value={draftPlayer.defaultVolume}
+                      onChange={(e) => setDraftPlayer((s) => ({ ...s, defaultVolume: parseInt(e.target.value) }))}
                       className="w-24 accent-fuchsia-500"
                     />
-                    <span className="w-8 text-right text-sm text-muted">{playerSettings.defaultVolume}%</span>
+                    <span className="w-8 text-right text-sm text-muted">{draftPlayer.defaultVolume}%</span>
                   </div>
                 </div>
               </div>
@@ -375,15 +513,15 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setContent({ ...content, showMusic: !content.showMusic })}
+                    onClick={() => setDraftContent((c) => ({ ...c, showMusic: !c.showMusic }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      content.showMusic ? 'bg-brand' : 'bg-surface-3',
+                      draftContent.showMusic ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      content.showMusic ? 'left-5.5' : 'left-0.5',
+                      draftContent.showMusic ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -397,15 +535,15 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setContent({ ...content, showMovies: !content.showMovies })}
+                    onClick={() => setDraftContent((c) => ({ ...c, showMovies: !c.showMovies }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      content.showMovies ? 'bg-brand' : 'bg-surface-3',
+                      draftContent.showMovies ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      content.showMovies ? 'left-5.5' : 'left-0.5',
+                      draftContent.showMovies ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -419,15 +557,15 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setContent({ ...content, showSeries: !content.showSeries })}
+                    onClick={() => setDraftContent((c) => ({ ...c, showSeries: !c.showSeries }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      content.showSeries ? 'bg-brand' : 'bg-surface-3',
+                      draftContent.showSeries ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      content.showSeries ? 'left-5.5' : 'left-0.5',
+                      draftContent.showSeries ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -437,10 +575,10 @@ export default function SettingsPage() {
                   <p className="mb-3 text-sm text-muted">Mostrar contenido con clasificación explícita</p>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setContent({ ...content, explicitContent: true })}
+                      onClick={() => setDraftContent((c) => ({ ...c, explicitContent: true }))}
                       className={cn(
                         'rounded-full border px-4 py-2 text-sm font-medium transition',
-                        content.explicitContent
+                        draftContent.explicitContent
                           ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
                           : 'border-line text-muted hover:text-text',
                       )}
@@ -448,10 +586,10 @@ export default function SettingsPage() {
                       Permitir
                     </button>
                     <button
-                      onClick={() => setContent({ ...content, explicitContent: false })}
+                      onClick={() => setDraftContent((c) => ({ ...c, explicitContent: false }))}
                       className={cn(
                         'rounded-full border px-4 py-2 text-sm font-medium transition',
-                        !content.explicitContent
+                        !draftContent.explicitContent
                           ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
                           : 'border-line text-muted hover:text-text',
                       )}
@@ -478,15 +616,15 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Cuando tus artistas favoritos publiquen</p>
                   </div>
                   <button
-                    onClick={() => setNotificationSettings((s) => ({ ...s, newSongs: !s.newSongs }))}
+                    onClick={() => setDraftNotifications((s) => ({ ...s, newSongs: !s.newSongs }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      notificationSettings.newSongs ? 'bg-brand' : 'bg-surface-3',
+                      draftNotifications.newSongs ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      notificationSettings.newSongs ? 'left-5.5' : 'left-0.5',
+                      draftNotifications.newSongs ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -497,15 +635,15 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Nuevas películas disponibles</p>
                   </div>
                   <button
-                    onClick={() => setNotificationSettings((s) => ({ ...s, movieUpdates: !s.movieUpdates }))}
+                    onClick={() => setDraftNotifications((s) => ({ ...s, movieUpdates: !s.movieUpdates }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      notificationSettings.movieUpdates ? 'bg-brand' : 'bg-surface-3',
+                      draftNotifications.movieUpdates ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      notificationSettings.movieUpdates ? 'left-5.5' : 'left-0.5',
+                      draftNotifications.movieUpdates ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -516,15 +654,15 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Respuestas a tus publicaciones</p>
                   </div>
                   <button
-                    onClick={() => setNotificationSettings((s) => ({ ...s, forumActivity: !s.forumActivity }))}
+                    onClick={() => setDraftNotifications((s) => ({ ...s, forumActivity: !s.forumActivity }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      notificationSettings.forumActivity ? 'bg-brand' : 'bg-surface-3',
+                      draftNotifications.forumActivity ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      notificationSettings.forumActivity ? 'left-5.5' : 'left-0.5',
+                      draftNotifications.forumActivity ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -544,37 +682,37 @@ export default function SettingsPage() {
                   <p className="mb-3 font-medium text-text">Tema</p>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => setTheme('dark')}
+                      onClick={() => setDraftTheme('dark')}
                       className={cn(
                         'flex items-center gap-2 rounded-xl border px-4 py-3 transition',
-                        theme === 'dark' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
+                        draftTheme === 'dark' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
                       )}
                     >
                       <Moon className="h-4 w-4" />
                       <span className="text-sm font-medium">Oscuro</span>
                     </button>
                     <button
-                      onClick={() => setTheme('light')}
+                      onClick={() => setDraftTheme('light')}
                       className={cn(
                         'flex items-center gap-2 rounded-xl border px-4 py-3 transition',
-                        theme === 'light' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
+                        draftTheme === 'light' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
                       )}
                     >
                       <Sun className="h-4 w-4" />
                       <span className="text-sm font-medium">Claro</span>
                     </button>
                     <button
-                      onClick={() => setTheme('system')}
+                      onClick={() => setDraftTheme('system')}
                       className={cn(
                         'flex items-center gap-2 rounded-xl border px-4 py-3 transition',
-                        theme === 'system' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
+                        draftTheme === 'system' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
                       )}
                     >
                       <Settings className="h-4 w-4" />
                       <span className="text-sm font-medium">Sistema</span>
                     </button>
                   </div>
-                  <p className="mt-3 text-sm text-muted">El tema oscuro es el color oficial de la plataforma Resona.</p>
+                  <p className="mt-3 text-sm text-muted">Los cambios se aplicarán a la aplicación únicamente al guardar y confirmar.</p>
                 </div>
 
                 <div className="flex items-center justify-between rounded-xl border border-line p-4">
@@ -583,15 +721,15 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Efectos visuales y transiciones</p>
                   </div>
                   <button
-                    onClick={() => setAppearanceSettings((s) => ({ ...s, animations: !s.animations }))}
+                    onClick={() => setDraftAppearance((s) => ({ ...s, animations: !s.animations }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      appearanceSettings.animations ? 'bg-brand' : 'bg-surface-3',
+                      draftAppearance.animations ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      appearanceSettings.animations ? 'left-5.5' : 'left-0.5',
+                      draftAppearance.animations ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -602,15 +740,15 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Mostrar más contenido en pantalla</p>
                   </div>
                   <button
-                    onClick={() => setAppearanceSettings((s) => ({ ...s, compact: !s.compact }))}
+                    onClick={() => setDraftAppearance((s) => ({ ...s, compact: !s.compact }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
-                      appearanceSettings.compact ? 'bg-brand' : 'bg-surface-3',
+                      draftAppearance.compact ? 'bg-brand' : 'bg-surface-3',
                     )}
                   >
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-                      appearanceSettings.compact ? 'left-5.5' : 'left-0.5',
+                      draftAppearance.compact ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>
@@ -629,33 +767,49 @@ export default function SettingsPage() {
                 <div className="rounded-xl border border-line p-4">
                   <p className="mb-3 font-medium text-text">{t('language')} de la interfaz</p>
                   <div className="flex flex-wrap gap-2">
-                    {LANGUAGES.map(({ id, label, flag }) => (
+                    {LANGUAGES.map(({ id, label }) => (
                       <button
                         key={id}
-                        onClick={() => setLanguage(id)}
+                        onClick={() => setDraftLanguage(id)}
                         className={cn(
                           'flex items-center gap-2 rounded-xl border px-4 py-2.5 transition',
-                          language === id
+                          draftLanguage === id
                             ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
                             : 'border-line text-muted hover:text-text',
                         )}
                       >
-                        <span className="text-lg">{flag}</span>
+                        <Globe className="h-4 w-4" />
                         <span className="text-sm font-medium">{label}</span>
                       </button>
                     ))}
                   </div>
-                  <p className="mt-3 text-sm text-muted">El idioma del sistema se detecta automáticamente.</p>
+                  <p className="mt-3 text-sm text-muted">El idioma seleccionado se aplicará al presionar Guardar y confirmar.</p>
                 </div>
 
                 <div className="rounded-xl border border-line p-4">
                   <p className="mb-3 font-medium text-text">Contenido en español</p>
                   <p className="mb-3 text-sm text-muted">Filtrar películas, series y música en español</p>
                   <div className="flex gap-2">
-                    <button className="rounded-full border border-fuchsia-400/50 bg-brand/15 px-4 py-2 text-sm font-medium text-fuchsia-300">
+                    <button
+                      onClick={() => setDraftContent((c) => ({ ...c, spanishOnly: true }))}
+                      className={cn(
+                        'rounded-full border px-4 py-2 text-sm font-medium transition',
+                        draftContent.spanishOnly
+                          ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                          : 'border-line text-muted hover:text-text',
+                      )}
+                    >
                       Solo español
                     </button>
-                    <button className="rounded-full border border-line px-4 py-2 text-sm font-medium text-muted hover:text-text">
+                    <button
+                      onClick={() => setDraftContent((c) => ({ ...c, spanishOnly: false }))}
+                      className={cn(
+                        'rounded-full border px-4 py-2 text-sm font-medium transition',
+                        !draftContent.spanishOnly
+                          ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                          : 'border-line text-muted hover:text-text',
+                      )}
+                    >
                       Todos los idiomas
                     </button>
                   </div>
@@ -722,6 +876,17 @@ export default function SettingsPage() {
         confirmLabel="Entendido"
         onClose={() => setShowDeleteAccount(false)}
         onConfirm={handleDeleteAccount}
+      />
+
+      <ConfirmDialog
+        open={showSaveConfirm}
+        title="¿Deseas guardar los cambios?"
+        message="¿Estás seguro de que deseas guardar y activar los cambios realizados en tu configuración?"
+        confirmLabel="Sí, deseo guardar"
+        cancelLabel="Cancelar"
+        danger={false}
+        onClose={() => setShowSaveConfirm(false)}
+        onConfirm={handleSaveConfirmed}
       />
     </div>
   );

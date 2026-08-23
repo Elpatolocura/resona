@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CornerDownRight, Heart, ListPlus, MoreHorizontal, Plus, ListMusic, X } from 'lucide-react';
+import { Bookmark, CornerDownRight, Heart, ListPlus, MoreHorizontal, Plus, ListMusic, X } from 'lucide-react';
 import type { AudiusTrack } from '../types';
 import { useLibraryStore } from '../store/libraryStore';
 import { usePlayerStore } from '../store/playerStore';
 import { toast } from '../store/toastStore';
 import { cn } from '../utils/format';
+import { trackToMedia } from '../utils/media';
 import ConfirmDialog from './ConfirmDialog';
 
 interface TrackMenuProps {
@@ -25,11 +26,14 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
   const favorites = useLibraryStore((s) => s.favorites);
   const playlists = useLibraryStore((s) => s.playlists);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
+  const toggleMyList = useLibraryStore((s) => s.toggleMyList);
+  const isInMyList = useLibraryStore((s) => s.isInMyList(track.id));
   const addToPlaylist = useLibraryStore((s) => s.addToPlaylist);
   const addNext = usePlayerStore((s) => s.addNext);
   const addToQueueEnd = usePlayerStore((s) => s.addToQueueEnd);
 
   const isFav = favorites.some((f) => f.id === track.id);
+  const mediaTrack = trackToMedia(track);
 
   useEffect(() => {
     if (!open) return;
@@ -100,6 +104,22 @@ export default function TrackMenu({ track, align = 'right', className }: TrackMe
       >
         <Heart className={cn('h-3.5 w-3.5', isFav && 'fill-accent-2 text-accent-2')} />
         {isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleMyList(mediaTrack);
+          toast(
+            isInMyList ? 'Quitado de Mi Lista' : 'Añadido a Mi Lista',
+            isInMyList ? 'info' : 'success',
+          );
+          setOpen(false);
+        }}
+        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-text transition hover:bg-surface-3"
+      >
+        <Bookmark className={cn('h-3.5 w-3.5', isInMyList && 'fill-fuchsia-300 text-fuchsia-300')} />
+        {isInMyList ? 'Quitar de Mi Lista' : 'Añadir a Mi Lista'}
       </button>
 
       <button

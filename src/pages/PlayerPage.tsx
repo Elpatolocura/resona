@@ -239,11 +239,11 @@ export default function PlayerPage() {
       {/* Right side - Queue or Similar tracks */}
       <div className="hidden w-1/2 flex-col border-l border-line bg-surface/30 xl:flex">
         <div className="flex border-b border-line">
-          <button onClick={() => showQueue && toggleQueue()} className={cn('flex-1 py-3 text-sm font-semibold transition', !showQueue ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
-            🎵 Canciones similares
+          <button onClick={() => showQueue && toggleQueue()} className={cn('flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-1.5', !showQueue ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
+            <Music2 className="h-4 w-4" /> Canciones similares
           </button>
-          <button onClick={() => !showQueue && toggleQueue()} className={cn('flex-1 py-3 text-sm font-semibold transition', showQueue ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
-            📋 Cola de reproducción
+          <button onClick={() => !showQueue && toggleQueue()} className={cn('flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-1.5', showQueue ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
+            <Disc3 className="h-4 w-4" /> Cola de reproducción
           </button>
         </div>
         {showQueue ? (

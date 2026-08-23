@@ -47,7 +47,9 @@ export interface AudiusPlaylist {
   follows?: number | null;
 }
 
-export type MediaKind = 'music' | 'movie' | 'tv';
+import type { ForumPost } from '../utils/forumData';
+
+export type MediaKind = 'music' | 'movie' | 'tv' | 'forum';
 
 export interface MusicMedia {
   kind: 'music';
@@ -82,7 +84,16 @@ export interface MediaVod {
   originalLanguage?: string;
 }
 
-export type Media = MusicMedia | MediaVod;
+export interface MediaForum {
+  kind: 'forum';
+  id: string;
+  title: string;
+  subtitle: string;
+  poster: string | null;
+  post: ForumPost;
+}
+
+export type Media = MusicMedia | MediaVod | MediaForum;
 
 export interface WatchHistoryEntry {
   media: MediaVod;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
+  Bookmark,
   MessageSquare,
   ThumbsUp,
   Send,
@@ -22,6 +23,9 @@ import {
 } from 'lucide-react';
 import { cn } from '../utils/format';
 import { INITIAL_POSTS, type ForumPost, type ForumComment } from '../utils/forumData';
+import { useLibraryStore } from '../store/libraryStore';
+import { postToMedia } from '../utils/media';
+import { toast } from '../store/toastStore';
 
 const CATEGORIES = [
   { id: 'movies', label: 'Películas', icon: Film },
@@ -29,8 +33,6 @@ const CATEGORIES = [
   { id: 'music', label: 'Música', icon: Music },
   { id: 'general', label: 'General', icon: Flame },
 ];
-
-const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👎', '❤️', '🎬', '🎵', '📺', '🎮', '💯', '🙌', '🤔', '👀', '⭐', '🎉', '💬', '🎤', '🎸'];
 
 function renderText(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -372,14 +374,21 @@ export default function ForumThreadPage() {
                 {currentPost.comments.length} {currentPost.comments.length === 1 ? 'comentario' : 'comentarios'}
               </span>
               <button
-                onClick={() => setIsFavorite(!isFavorite)}
+                onClick={() => {
+                  const isSaved = useLibraryStore.getState().isInMyList(`forum:${currentPost.id}`);
+                  useLibraryStore.getState().toggleMyList(postToMedia(currentPost));
+                  toast(
+                    isSaved ? 'Hilo quitado de Mi Lista' : 'Hilo guardado en Mi Lista',
+                    isSaved ? 'info' : 'success',
+                  );
+                }}
                 className={cn(
                   'inline-flex items-center gap-2 text-sm font-semibold transition-colors',
-                  isFavorite ? 'text-pink-400' : 'text-muted hover:text-pink-400',
+                  useLibraryStore.getState().isInMyList(`forum:${currentPost.id}`) ? 'text-fuchsia-300' : 'text-muted hover:text-fuchsia-300',
                 )}
               >
-                <Heart className={cn('h-4.5 w-4.5', isFavorite && 'fill-current')} />
-                {isFavorite ? 'Guardado' : 'Guardar'}
+                <Bookmark className={cn('h-4.5 w-4.5', useLibraryStore.getState().isInMyList(`forum:${currentPost.id}`) && 'fill-current')} />
+                {useLibraryStore.getState().isInMyList(`forum:${currentPost.id}`) ? 'En Mi Lista' : '+ Mi Lista'}
               </button>
               <button
                 onClick={sharePost}
@@ -430,30 +439,8 @@ export default function ForumThreadPage() {
                   }
                 }}
                 placeholder={replyTo ? 'Escribe tu respuesta...' : 'Escribe un comentario...'}
-                className="w-full rounded-full border border-line bg-surface/80 px-5 pr-10 py-2.5 text-sm text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                className="w-full rounded-full border border-line bg-surface/80 px-5 py-2.5 text-sm text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
               />
-              <button
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition hover:text-text"
-              >
-                <Smile className="h-4 w-4" />
-              </button>
-              {showEmojiPicker && (
-                <div className="absolute right-0 top-full z-10 mt-1 grid grid-cols-5 gap-1 rounded-xl border border-line bg-surface-2 p-2 shadow-xl">
-                  {EMOJIS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      onClick={() => {
-                        setNewComment((prev) => prev + emoji);
-                        setShowEmojiPicker(false);
-                      }}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-lg transition hover:bg-surface-3"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
             <button
               onClick={addComment}

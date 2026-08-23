@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Star, Trash2 } from 'lucide-react';
+import { Bookmark, Play, Star, Trash2 } from 'lucide-react';
 import type { MediaVod } from '../../types';
 import { formatRating, vodMediaTypeLabel } from '../../utils/media';
 import { cn } from '../../utils/format';
 import ImageWithFallback from '../ImageWithFallback';
+import { useLibraryStore } from '../../store/libraryStore';
+import { toast } from '../../store/toastStore';
 
 interface MediaCardProps {
   media: MediaVod;
@@ -15,6 +17,8 @@ export default function MediaCard({ media, className, onRemove }: MediaCardProps
   const navigate = useNavigate();
   const rating = formatRating(media.rating);
   const isMovie = media.kind === 'movie';
+  const toggleMyList = useLibraryStore((s) => s.toggleMyList);
+  const isInMyList = useLibraryStore((s) => s.isInMyList(media.id));
 
   return (
     <div
@@ -61,6 +65,28 @@ export default function MediaCard({ media, className, onRemove }: MediaCardProps
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           )}
+
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleMyList(media);
+              toast(
+                isInMyList ? 'Quitado de Mi Lista' : 'Añadido a Mi Lista',
+                isInMyList ? 'info' : 'success',
+              );
+            }}
+            aria-label={isInMyList ? 'Quitar de Mi Lista' : 'Añadir a Mi Lista'}
+            className={cn(
+              'absolute bottom-2 rounded-full p-1.5 backdrop-blur transition group-hover:opacity-100',
+              onRemove ? 'left-10' : 'left-2',
+              isInMyList
+                ? 'bg-brand text-white opacity-100'
+                : 'bg-black/50 text-white/80 opacity-0 hover:text-fuchsia-300',
+            )}
+          >
+            <Bookmark className={cn('h-3.5 w-3.5', isInMyList && 'fill-current')} />
+          </button>
 
           {rating && (
             <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold text-amber-300 backdrop-blur">

@@ -1,4 +1,5 @@
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
+import { useAuthStore } from '../store/authStore';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -19,12 +20,40 @@ const ThemeContext = createContext<ThemeContextType>({
 export const useTheme = () => useContext(ThemeContext);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem('resona_theme');
-    return (saved as Theme) || 'dark';
+    if (saved && (saved === 'dark' || saved === 'light' || saved === 'system')) {
+      return saved as Theme;
+    }
+    const userTheme = useAuthStore.getState().user?.preferences?.theme;
+    if (userTheme && (userTheme === 'dark' || userTheme === 'light' || userTheme === 'system')) {
+      return userTheme as Theme;
+    }
+    return 'dark';
   });
 
   const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('dark');
+
+  const setTheme = useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
+    localStorage.setItem('resona_theme', newTheme);
+  }, []);
+
+  const persistTheme = useCallback(() => {
+    localStorage.setItem('resona_theme', theme);
+  }, [theme]);
+
+  // Sync theme if auth user changes and has preferences
+  useEffect(() => {
+    const unsub = useAuthStore.subscribe((state) => {
+      const prefTheme = state.user?.preferences?.theme;
+      if (prefTheme && (prefTheme === 'dark' || prefTheme === 'light' || prefTheme === 'system')) {
+        setThemeState(prefTheme as Theme);
+        localStorage.setItem('resona_theme', prefTheme);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -48,11 +77,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
     root.classList.remove('dark', 'light');
     root.classList.add(resolvedTheme);
-  }, [resolvedTheme]);
-
-  const persistTheme = useCallback(() => {
     localStorage.setItem('resona_theme', theme);
-  }, [theme]);
+  }, [resolvedTheme, theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme, persistTheme }}>

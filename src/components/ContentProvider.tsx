@@ -1,10 +1,11 @@
 import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 
-interface ContentSettings {
+export interface ContentSettings {
   showMusic: boolean;
   showMovies: boolean;
   showSeries: boolean;
   explicitContent: boolean;
+  spanishOnly?: boolean;
 }
 
 interface ContentContextType {
@@ -18,6 +19,7 @@ const DEFAULT_CONTENT: ContentSettings = {
   showMovies: true,
   showSeries: true,
   explicitContent: false,
+  spanishOnly: false,
 };
 
 const ContentContext = createContext<ContentContextType>({

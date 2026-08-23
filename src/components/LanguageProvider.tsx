@@ -1,4 +1,5 @@
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
+import { useAuthStore } from '../store/authStore';
 
 type Language = 'system' | 'es' | 'en' | 'pt' | 'fr';
 
@@ -186,20 +187,48 @@ export const LABELS: Record<'es' | 'en' | 'pt' | 'fr', Record<string, string>> =
 };
 
 export const LANGUAGES = [
-  { id: 'system' as Language, label: 'Sistema', flag: '🌐' },
-  { id: 'es' as Language, label: 'Español', flag: '🇪🇸' },
-  { id: 'en' as Language, label: 'English', flag: '🇺🇸' },
-  { id: 'pt' as Language, label: 'Português', flag: '🇧🇷' },
-  { id: 'fr' as Language, label: 'Français', flag: '🇫🇷' },
+  { id: 'system' as Language, label: 'Sistema', code: 'SYS' },
+  { id: 'es' as Language, label: 'Español', code: 'ES' },
+  { id: 'en' as Language, label: 'English', code: 'EN' },
+  { id: 'pt' as Language, label: 'Português', code: 'PT' },
+  { id: 'fr' as Language, label: 'Français', code: 'FR' },
 ];
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
+  const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem('resona_language');
-    return (saved as Language) || 'system';
+    if (saved && (saved === 'system' || saved === 'es' || saved === 'en' || saved === 'pt' || saved === 'fr')) {
+      return saved as Language;
+    }
+    const userLang = useAuthStore.getState().user?.preferences?.language;
+    if (userLang && (userLang === 'system' || userLang === 'es' || userLang === 'en' || userLang === 'pt' || userLang === 'fr')) {
+      return userLang as Language;
+    }
+    return 'system';
   });
 
   const [resolvedLanguage, setResolvedLanguage] = useState<'es' | 'en' | 'pt' | 'fr'>('es');
+
+  const setLanguage = useCallback((newLang: Language) => {
+    setLanguageState(newLang);
+    localStorage.setItem('resona_language', newLang);
+  }, []);
+
+  const persistLanguage = useCallback(() => {
+    localStorage.setItem('resona_language', language);
+  }, [language]);
+
+  // Sync language if auth user changes and has preferences
+  useEffect(() => {
+    const unsub = useAuthStore.subscribe((state) => {
+      const prefLang = state.user?.preferences?.language;
+      if (prefLang && (prefLang === 'system' || prefLang === 'es' || prefLang === 'en' || prefLang === 'pt' || prefLang === 'fr')) {
+        setLanguageState(prefLang as Language);
+        localStorage.setItem('resona_language', prefLang);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const resolveLanguage = () => {
@@ -212,9 +241,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     };
 
     resolveLanguage();
-  }, [language]);
-
-  const persistLanguage = useCallback(() => {
     localStorage.setItem('resona_language', language);
   }, [language]);
 

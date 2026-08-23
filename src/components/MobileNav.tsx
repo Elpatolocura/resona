@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Clapperboard, Heart, Home, Library, MessageSquare, Search, Settings, Tv } from 'lucide-react';
+import { Bookmark, Clapperboard, Heart, Home, Library, MessageSquare, Search, Settings, Tv } from 'lucide-react';
 import { useContent } from './ContentProvider';
 import { cn } from '../utils/format';
 
@@ -14,11 +14,11 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/', label: 'Inicio', icon: Home, end: true, requires: 'music' },
   { to: '/search', label: 'Buscar', icon: Search },
+  { to: '/my-list', label: 'Mi Lista', icon: Bookmark },
   { to: '/library', label: 'Biblioteca', icon: Library },
   { to: '/favorites', label: 'Favoritos', icon: Heart },
   { to: '/movies', label: 'Películas', icon: Clapperboard, requires: 'movies' },
   { to: '/tv', label: 'Series', icon: Tv, requires: 'series' },
-  { to: '/forum', label: 'Foro', icon: MessageSquare },
   { to: '/settings', label: 'Config', icon: Settings },
 ];
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Bookmark,
   MessageSquare,
   ThumbsUp,
   Plus,
@@ -26,6 +27,9 @@ import {
 import { cn } from '../utils/format';
 import { INITIAL_POSTS, type ForumPost, type ForumComment } from '../utils/forumData';
 import { useMediaStore } from '../store/mediaStore';
+import { useLibraryStore } from '../store/libraryStore';
+import { postToMedia } from '../utils/media';
+import { toast } from '../store/toastStore';
 
 const CATEGORIES = [
   { id: 'all', label: 'Todo', icon: MessagesSquare },
@@ -34,8 +38,6 @@ const CATEGORIES = [
   { id: 'music', label: 'Música', icon: Music },
   { id: 'general', label: 'General', icon: Flame },
 ];
-
-const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👎', '❤️', '🎬', '🎵', '📺', '🎮', '💯', '🙌', '🤔', '👀', '⭐', '🎉', '💬', '🎤', '🎸'];
 
 function renderText(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -510,14 +512,21 @@ export default function ForumPage() {
                         {totalComments} {totalComments === 1 ? 'comentario' : 'comentarios'}
                       </button>
                       <button
-                        onClick={() => toggleFavorite(post.id)}
+                        onClick={() => {
+                          const isSaved = useLibraryStore.getState().isInMyList(`forum:${post.id}`);
+                          useLibraryStore.getState().toggleMyList(postToMedia(post));
+                          toast(
+                            isSaved ? 'Hilo quitado de Mi Lista' : 'Hilo guardado en Mi Lista',
+                            isSaved ? 'info' : 'success',
+                          );
+                        }}
                         className={cn(
                           'inline-flex items-center gap-1.5 text-xs font-medium transition-colors',
-                          forumFavorites.includes(post.id) ? 'text-pink-400' : 'text-faint hover:text-pink-400',
+                          useLibraryStore.getState().isInMyList(`forum:${post.id}`) ? 'text-fuchsia-300' : 'text-faint hover:text-fuchsia-300',
                         )}
                       >
-                        <Heart className={cn('h-3.5 w-3.5', forumFavorites.includes(post.id) && 'fill-current')} />
-                        {forumFavorites.includes(post.id) ? 'Guardado' : 'Guardar'}
+                        <Bookmark className={cn('h-3.5 w-3.5', useLibraryStore.getState().isInMyList(`forum:${post.id}`) && 'fill-current')} />
+                        {useLibraryStore.getState().isInMyList(`forum:${post.id}`) ? 'En Mi Lista' : 'Mi Lista'}
                       </button>
                       <button
                         onClick={() => sharePost(post)}
@@ -644,32 +653,10 @@ export default function ForumPage() {
                   <textarea
                     value={newBody}
                     onChange={(e) => setNewBody(e.target.value)}
-                    placeholder="Escribe tu publicación... Puedes usar emojis 😊"
+                    placeholder="Escribe tu publicación..."
                     rows={4}
                     className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
                   />
-                  <button
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="absolute right-2 top-2 rounded-full p-1.5 text-muted transition hover:bg-surface-3 hover:text-text"
-                  >
-                    <Smile className="h-4 w-4" />
-                  </button>
-                  {showEmojiPicker && (
-                    <div className="absolute right-0 top-10 z-10 grid grid-cols-5 gap-1 rounded-xl border border-line bg-surface-2 p-2 shadow-xl">
-                      {EMOJIS.map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => {
-                            setNewBody((prev) => prev + emoji);
-                            setShowEmojiPicker(false);
-                          }}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-lg transition hover:bg-surface-3"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -681,24 +668,24 @@ export default function ForumPage() {
                   <button
                     onClick={() => setImageMode('url')}
                     className={cn(
-                      'flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
+                      'flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
                       imageMode === 'url'
                         ? 'border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300'
                         : 'border-line text-muted hover:text-text',
                     )}
                   >
-                    🌐 URL
+                    <Link2 className="h-3.5 w-3.5" /> URL
                   </button>
                   <button
                     onClick={() => setImageMode('file')}
                     className={cn(
-                      'flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
+                      'flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
                       imageMode === 'file'
                         ? 'border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300'
                         : 'border-line text-muted hover:text-text',
                     )}
                   >
-                    📁 Subir archivo
+                    <ImageIcon className="h-3.5 w-3.5" /> Subir archivo
                   </button>
                 </div>
 
@@ -904,9 +891,9 @@ export default function ForumPage() {
               />
               <label
                 htmlFor="avatar-upload"
-                className="cursor-pointer rounded-full bg-fuchsia-500/20 px-6 py-2.5 text-sm font-semibold text-fuchsia-300 transition hover:bg-fuchsia-500/30"
+                className="inline-flex cursor-pointer items-center justify-center rounded-full bg-fuchsia-500/20 px-6 py-2.5 text-sm font-semibold text-fuchsia-300 transition hover:bg-fuchsia-500/30"
               >
-                📁 Subir imagen
+                <ImageIcon className="mr-1.5 h-4 w-4" /> Subir imagen
               </label>
 
               {userAvatar && (

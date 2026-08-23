@@ -7,6 +7,7 @@ interface LibraryState {
   favorites: AudiusTrack[];
   playlists: LocalPlaylist[];
   artists: AudiusUser[];
+  myList: Media[];
   toggleFavorite: (track: AudiusTrack) => void;
   isFavorite: (id: string) => boolean;
   toggleArtist: (artist: AudiusUser) => void;
@@ -17,6 +18,9 @@ interface LibraryState {
   addToPlaylist: (playlistId: string, track: AudiusTrack) => boolean;
   addMediaToPlaylist: (playlistId: string, media: Media) => boolean;
   removeFromPlaylist: (playlistId: string, mediaId: string) => void;
+  toggleMyList: (item: Media) => void;
+  isInMyList: (id: string) => boolean;
+  removeFromMyList: (id: string) => void;
 }
 
 interface PersistedV0 {
@@ -35,6 +39,7 @@ export const useLibraryStore = create<LibraryState>()(
       favorites: [],
       playlists: [],
       artists: [],
+      myList: [],
 
       toggleFavorite: (track) =>
         set((state) => {
@@ -103,6 +108,23 @@ export const useLibraryStore = create<LibraryState>()(
               ? { ...p, tracks: p.tracks.filter((t) => t.id !== mediaId) }
               : p,
           ),
+        })),
+
+      toggleMyList: (item) =>
+        set((state) => {
+          const exists = (state.myList || []).some((m) => m.id === item.id);
+          return {
+            myList: exists
+              ? (state.myList || []).filter((m) => m.id !== item.id)
+              : [item, ...(state.myList || [])],
+          };
+        }),
+
+      isInMyList: (id) => (get().myList || []).some((m) => m.id === id),
+
+      removeFromMyList: (id) =>
+        set((state) => ({
+          myList: (state.myList || []).filter((m) => m.id !== id),
         })),
     }),
     {

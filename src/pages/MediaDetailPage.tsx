@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Clock, Film, Heart, Play, Star, Tv } from 'lucide-react';
+import { Bookmark, Clock, Film, Heart, Play, Star, Tv } from 'lucide-react';
 import type { MediaVod } from '../types';
 import type { TmdbKind } from '../services/tmdb';
 import { useMediaStore } from '../store/mediaStore';
 import { usePlayerStore } from '../store/playerStore';
+import { useLibraryStore } from '../store/libraryStore';
 import { toast } from '../store/toastStore';
 import MediaGrid from '../components/media/MediaGrid';
 import ErrorState from '../components/ErrorState';
@@ -31,6 +32,9 @@ export default function MediaDetailPage() {
   const selectedEpisode = useMediaStore((s) => s.selectedEpisode);
   const setSelectedSeason = useMediaStore((s) => s.setSelectedSeason);
   const setSelectedEpisode = useMediaStore((s) => s.setSelectedEpisode);
+
+  const toggleMyList = useLibraryStore((s) => s.toggleMyList);
+  const isInMyList = useLibraryStore((s) => s.isInMyList(`${k}:${numId}`));
 
   useEffect(() => {
     if (!numId) return;
@@ -174,6 +178,24 @@ export default function MediaDetailPage() {
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-bg/40 text-muted backdrop-blur transition hover:border-fuchsia-400/40 hover:text-fuchsia-300"
               >
                 <Heart className={cn('h-5 w-5', isFav && 'fill-accent-2 text-accent-2')} />
+              </button>
+              <button
+                onClick={() => {
+                  toggleMyList(media);
+                  toast(
+                    isInMyList ? 'Quitado de Mi Lista' : 'Añadido a Mi Lista',
+                    isInMyList ? 'info' : 'success',
+                  );
+                }}
+                className={cn(
+                  'inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition',
+                  isInMyList
+                    ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                    : 'border-line bg-bg/40 text-muted hover:border-fuchsia-400/40 hover:text-text',
+                )}
+              >
+                <Bookmark className={cn('h-4 w-4', isInMyList && 'fill-current')} />
+                {isInMyList ? 'En Mi Lista' : '+ Mi Lista'}
               </button>
             </div>
 

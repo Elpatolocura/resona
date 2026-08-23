@@ -1,4 +1,5 @@
-import type { AudiusTrack, Media, MediaVod, MusicMedia } from '../types';
+import type { AudiusTrack, Media, MediaForum, MediaVod, MusicMedia } from '../types';
+import type { ForumPost } from './forumData';
 
 const TMDB_IMG = 'https://image.tmdb.org/t/p';
 
@@ -11,6 +12,17 @@ export function trackToMedia(track: AudiusTrack): MusicMedia {
     poster: track.artwork?.['480x480'] ?? track.artwork?.['150x150'] ?? null,
     duration: track.duration || 0,
     track,
+  };
+}
+
+export function postToMedia(post: ForumPost): MediaForum {
+  return {
+    kind: 'forum',
+    id: `forum:${post.id}`,
+    title: post.title,
+    subtitle: `Por ${post.author} · ${post.comments?.length || 0} comentarios`,
+    poster: post.images?.[0] || null,
+    post,
   };
 }
 

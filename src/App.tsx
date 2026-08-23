@@ -9,6 +9,7 @@ import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
 import LibraryPage from './pages/LibraryPage';
 import FavoritesPage from './pages/FavoritesPage';
+import MyListPage from './pages/MyListPage';
 import PlaylistsPage from './pages/PlaylistsPage';
 import PlaylistDetailPage from './pages/PlaylistDetailPage';
 import AlbumPage from './pages/AlbumPage';
@@ -38,12 +39,13 @@ export default function App() {
         <ContentProvider>
           <HashRouter>
             <ScrollToTop />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/player" element={<PlayerPage />} />
-            <Route element={<MainLayout />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/player" element={<PlayerPage />} />
+              <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/search" element={<SearchPage />} />
+                <Route path="/my-list" element={<MyListPage />} />
                 <Route path="/library" element={<LibraryPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/playlists" element={<PlaylistsPage />} />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
+  Bookmark,
   Clapperboard,
   Heart,
   Home,
@@ -33,6 +34,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/', label: 'Inicio', icon: Home, end: true, requires: 'music' },
   { to: '/search', label: 'Buscar', icon: Search },
+  { to: '/my-list', label: 'Mi Lista', icon: Bookmark },
   { to: '/library', label: 'Biblioteca', icon: Library },
   { to: '/favorites', label: 'Favoritos', icon: Heart },
   { to: '/playlists', label: 'Playlists', icon: ListMusic },
