@@ -12,10 +12,13 @@ import SongCard from '../components/SongCard';
 import ArtistCard from '../components/ArtistCard';
 import CollectionCard from '../components/CollectionCard';
 import MediaGrid from '../components/media/MediaGrid';
+import Pagination from '../components/Pagination';
 import { CardGridSkeleton } from '../components/Skeleton';
 import ErrorState from '../components/ErrorState';
 import { cn } from '../utils/format';
 import type { AudiusTrack, AudiusUser } from '../types';
+
+const ITEMS_PER_PAGE_OPTIONS = [12, 18, 24, 36];
 
 export default function HomePage() {
   const trending = useApi(() => audius.trendingTracks('week'), []);
@@ -25,12 +28,42 @@ export default function HomePage() {
   const movies = useApi(() => tmdb.list('movie', 'trending'), []);
   const series = useApi(() => tmdb.list('tv', 'trending'), []);
 
+  const [songsPage, setSongsPage] = useState(1);
+  const [songsPerPage, setSongsPerPage] = useState(18);
+  const [moviesPage, setMoviesPage] = useState(1);
+  const [moviesPerPage, setMoviesPerPage] = useState(12);
+  const [seriesPage, setSeriesPage] = useState(1);
+  const [seriesPerPage, setSeriesPerPage] = useState(12);
+  const [albumsPage, setAlbumsPage] = useState(1);
+  const [albumsPerPage, setAlbumsPerPage] = useState(18);
+  const [playlistsPage, setPlaylistsPage] = useState(1);
+  const [playlistsPerPage, setPlaylistsPerPage] = useState(18);
+
   const recommended = trending.data ?? [];
   const heroTrack = trending.data?.[0];
   const artists: AudiusUser[] = uniqueBy(
     [...recommended, ...(underground.data ?? [])].map((t) => t.user).filter(Boolean),
     (u) => u.id,
   ).slice(0, 20);
+
+  const paginatedSongs = recommended.slice((songsPage - 1) * songsPerPage, songsPage * songsPerPage);
+  const totalSongsPages = Math.ceil(recommended.length / songsPerPage);
+
+  const allMovies = movies.data ?? [];
+  const paginatedMovies = allMovies.slice((moviesPage - 1) * moviesPerPage, moviesPage * moviesPerPage);
+  const totalMoviesPages = Math.ceil(allMovies.length / moviesPerPage);
+
+  const allSeries = series.data ?? [];
+  const paginatedSeries = allSeries.slice((seriesPage - 1) * seriesPerPage, seriesPage * seriesPerPage);
+  const totalSeriesPages = Math.ceil(allSeries.length / seriesPerPage);
+
+  const allAlbums = albums.data ?? [];
+  const paginatedAlbums = allAlbums.slice((albumsPage - 1) * albumsPerPage, albumsPage * albumsPerPage);
+  const totalAlbumsPages = Math.ceil(allAlbums.length / albumsPerPage);
+
+  const allPlaylists = playlists.data ?? [];
+  const paginatedPlaylists = allPlaylists.slice((playlistsPage - 1) * playlistsPerPage, playlistsPage * playlistsPerPage);
+  const totalPlaylistsPages = Math.ceil(allPlaylists.length / playlistsPerPage);
 
   const playList = (tracks: AudiusTrack[]) => {
     if (tracks.length) usePlayerStore.getState().playFrom(tracks, 0);
@@ -64,18 +97,26 @@ export default function HomePage() {
         ) : trending.error ? (
           <ErrorState message={trending.error} onRetry={trending.refetch} compact />
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {recommended.map((track) => (
-              <SongCard
-                key={track.id}
-                track={track}
-                onPlay={(t) => {
-                  const idx = recommended.findIndex((x) => x.id === t.id);
-                  usePlayerStore.getState().playFrom(recommended, Math.max(0, idx));
-                }}
-              />
-            ))}
-          </div>
+          <>
+            <ItemsPerPageSelector
+              value={songsPerPage}
+              onChange={(v) => { setSongsPerPage(v); setSongsPage(1); }}
+              options={ITEMS_PER_PAGE_OPTIONS}
+            />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {paginatedSongs.map((track) => (
+                <SongCard
+                  key={track.id}
+                  track={track}
+                  onPlay={(t) => {
+                    const idx = recommended.findIndex((x) => x.id === t.id);
+                    usePlayerStore.getState().playFrom(recommended, Math.max(0, idx));
+                  }}
+                />
+              ))}
+            </div>
+            <Pagination currentPage={songsPage} totalPages={totalSongsPages} onPageChange={setSongsPage} />
+          </>
         )}
       </Section>
 
@@ -122,14 +163,20 @@ export default function HomePage() {
           </Link>
         }
       >
+        <ItemsPerPageSelector
+          value={moviesPerPage}
+          onChange={(v) => { setMoviesPerPage(v); setMoviesPage(1); }}
+          options={ITEMS_PER_PAGE_OPTIONS}
+        />
         <MediaGrid
-          items={movies.data ?? []}
+          items={paginatedMovies}
           loading={movies.loading}
           error={movies.error}
           onRetry={movies.refetch}
           skeletonCount={6}
           emptyTitle="Sin películas"
         />
+        <Pagination currentPage={moviesPage} totalPages={totalMoviesPages} onPageChange={setMoviesPage} />
       </Section>
 
       <Section
@@ -145,14 +192,20 @@ export default function HomePage() {
           </Link>
         }
       >
+        <ItemsPerPageSelector
+          value={seriesPerPage}
+          onChange={(v) => { setSeriesPerPage(v); setSeriesPage(1); }}
+          options={ITEMS_PER_PAGE_OPTIONS}
+        />
         <MediaGrid
-          items={series.data ?? []}
+          items={paginatedSeries}
           loading={series.loading}
           error={series.error}
           onRetry={series.refetch}
           skeletonCount={6}
           emptyTitle="Sin series"
         />
+        <Pagination currentPage={seriesPage} totalPages={totalSeriesPages} onPageChange={setSeriesPage} />
       </Section>
 
       <Section
@@ -165,11 +218,19 @@ export default function HomePage() {
         ) : albums.error ? (
           <ErrorState message={albums.error} onRetry={albums.refetch} compact />
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {(albums.data ?? []).slice(0, 18).map((album) => (
-              <CollectionCard key={album.id} collection={album} kind="album" />
-            ))}
-          </div>
+          <>
+            <ItemsPerPageSelector
+              value={albumsPerPage}
+              onChange={(v) => { setAlbumsPerPage(v); setAlbumsPage(1); }}
+              options={ITEMS_PER_PAGE_OPTIONS}
+            />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {paginatedAlbums.map((album) => (
+                <CollectionCard key={album.id} collection={album} kind="album" />
+              ))}
+            </div>
+            <Pagination currentPage={albumsPage} totalPages={totalAlbumsPages} onPageChange={setAlbumsPage} />
+          </>
         )}
       </Section>
 
@@ -183,11 +244,19 @@ export default function HomePage() {
         ) : playlists.error ? (
           <ErrorState message={playlists.error} onRetry={playlists.refetch} compact />
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {(playlists.data ?? []).slice(0, 18).map((playlist) => (
-              <CollectionCard key={playlist.id} collection={playlist} kind="playlist" />
-            ))}
-          </div>
+          <>
+            <ItemsPerPageSelector
+              value={playlistsPerPage}
+              onChange={(v) => { setPlaylistsPerPage(v); setPlaylistsPage(1); }}
+              options={ITEMS_PER_PAGE_OPTIONS}
+            />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {paginatedPlaylists.map((playlist) => (
+                <CollectionCard key={playlist.id} collection={playlist} kind="playlist" />
+              ))}
+            </div>
+            <Pagination currentPage={playlistsPage} totalPages={totalPlaylistsPages} onPageChange={setPlaylistsPage} />
+          </>
         )}
       </Section>
 
@@ -219,6 +288,36 @@ export default function HomePage() {
           </div>
         </Section>
       )}
+    </div>
+  );
+}
+
+function ItemsPerPageSelector({
+  value,
+  onChange,
+  options,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  options: number[];
+}) {
+  return (
+    <div className="flex items-center gap-2 pb-2">
+      <span className="text-xs text-muted">Mostrar:</span>
+      {options.map((opt) => (
+        <button
+          key={opt}
+          onClick={() => onChange(opt)}
+          className={cn(
+            'rounded-full px-3 py-1 text-xs font-semibold transition',
+            value === opt
+              ? 'bg-brand text-white'
+              : 'bg-surface-2 text-muted hover:text-text',
+          )}
+        >
+          {opt}
+        </button>
+      ))}
     </div>
   );
 }

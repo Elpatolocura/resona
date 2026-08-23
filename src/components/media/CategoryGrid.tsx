@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Flame, ShieldAlert, Star, TrendingUp } from 'lucide-react';
+import { Flame, ShieldAlert, Star, TrendingUp, LayoutGrid, List } from 'lucide-react';
 import type { TmdbCategory, TmdbKind } from '../../services/tmdb';
 import { tmdb } from '../../services/tmdb';
 import { useApi } from '../../hooks/useApi';
 import MediaGrid from './MediaGrid';
+import Pagination from '../Pagination';
 import { cn } from '../../utils/format';
 
 const CATEGORIES: { id: TmdbCategory; label: string; icon: typeof Flame }[] = [
@@ -12,10 +13,14 @@ const CATEGORIES: { id: TmdbCategory; label: string; icon: typeof Flame }[] = [
   { id: 'top_rated', label: 'Mejor valoradas', icon: Star },
 ];
 
+const ITEMS_PER_PAGE_OPTIONS = [12, 24, 36, 48];
+
 export default function CategoryGrid({ kind }: { kind: TmdbKind }) {
   const [category, setCategory] = useState<TmdbCategory>('trending');
   const [genreId, setGenreId] = useState<number | null>(null);
   const [adult, setAdult] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(24);
 
   const genres = useApi(() => tmdb.genres(kind), [kind]);
   const genreList = genres.data ?? [];
@@ -34,7 +39,9 @@ export default function CategoryGrid({ kind }: { kind: TmdbKind }) {
     [kind, category, genreId, adult],
   );
 
-  const items = data.data ?? [];
+  const allItems = data.data ?? [];
+  const totalPages = Math.ceil(allItems.length / itemsPerPage);
+  const items = allItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const chip = (active: boolean) =>
     cn(
@@ -46,6 +53,7 @@ export default function CategoryGrid({ kind }: { kind: TmdbKind }) {
 
   const selectGenre = (id: number | null) => {
     setGenreId(id);
+    setCurrentPage(1);
     if (id !== null) setAdult(false);
   };
 
@@ -55,7 +63,7 @@ export default function CategoryGrid({ kind }: { kind: TmdbKind }) {
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
-            onClick={() => setCategory(c.id)}
+            onClick={() => { setCategory(c.id); setCurrentPage(1); }}
             className={chip(category === c.id && genreId === null && !adult)}
           >
             <c.icon className="h-4 w-4" />
@@ -69,6 +77,7 @@ export default function CategoryGrid({ kind }: { kind: TmdbKind }) {
           onClick={() => {
             if (!adult) setGenreId(null);
             setAdult(!adult);
+            setCurrentPage(1);
           }}
           aria-pressed={adult}
           className={cn(
@@ -112,6 +121,29 @@ export default function CategoryGrid({ kind }: { kind: TmdbKind }) {
           ))}
       </div>
 
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-muted">
+          {allItems.length} resultados · Página {currentPage} de {totalPages}
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted">Mostrar:</span>
+          {ITEMS_PER_PAGE_OPTIONS.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => { setItemsPerPage(opt); setCurrentPage(1); }}
+              className={cn(
+                'rounded-full px-3 py-1 text-xs font-semibold transition',
+                itemsPerPage === opt
+                  ? 'bg-brand text-white'
+                  : 'bg-surface-2 text-muted hover:text-text',
+              )}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <MediaGrid
         items={items}
         loading={data.loading}
@@ -119,6 +151,12 @@ export default function CategoryGrid({ kind }: { kind: TmdbKind }) {
         onRetry={data.refetch}
         emptyTitle="Sin resultados"
         emptyDescription="No encontramos contenido con estos filtros."
+      />
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
       />
     </div>
   );
