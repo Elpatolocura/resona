@@ -140,6 +140,9 @@ export default function ForumPage() {
   const [replyTo, setReplyTo] = useState<{ postId: string; commentId: string } | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [newImages, setNewImages] = useState('');
+  const [imageMode, setImageMode] = useState<'url' | 'file'>('url');
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const fileInputRef = useState<HTMLInputElement | null>(null);
   const [newVideo, setNewVideo] = useState('');
   const [newLink, setNewLink] = useState('');
   const [newLinkLabel, setNewLinkLabel] = useState('');
@@ -183,6 +186,26 @@ export default function ForumPage() {
     setReportDetails('');
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const result = ev.target?.result as string;
+          setUploadedImages((prev) => [...prev, result]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    e.target.value = '';
+  };
+
+  const removeUploadedImage = (index: number) => {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const toggleLike = (postId: string) => {
     setPosts((prev) =>
       prev.map((p) =>
@@ -212,7 +235,8 @@ export default function ForumPage() {
 
   const addPost = () => {
     if (!newTitle.trim() || !newBody.trim()) return;
-    const images = newImages.trim() ? newImages.split('\n').filter((u) => u.trim()) : [];
+    const urlImages = newImages.trim() ? newImages.split('\n').filter((u) => u.trim()) : [];
+    const allImages = [...uploadedImages, ...urlImages];
     const post: ForumPost = {
       id: String(Date.now()),
       title: newTitle.trim(),
@@ -222,7 +246,7 @@ export default function ForumPage() {
       date: 'Ahora mismo',
       likes: 0,
       likedByMe: false,
-      ...(images.length > 0 && { images }),
+      ...(allImages.length > 0 && { images: allImages }),
       ...(newVideo.trim() && { video: newVideo.trim() }),
       ...(newLinks.length > 0 && { links: newLinks }),
       comments: [],
@@ -231,6 +255,8 @@ export default function ForumPage() {
     setNewTitle('');
     setNewBody('');
     setNewImages('');
+    setUploadedImages([]);
+    setImageMode('url');
     setNewVideo('');
     setNewLinks([]);
     setShowNewPost(false);
@@ -569,16 +595,78 @@ export default function ForumPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">
-                  <span className="flex items-center gap-1"><ImageIcon className="h-3 w-3" /> Imágenes (URLs, una por línea)</span>
+                <label className="mb-2 block text-xs font-semibold text-muted">
+                  <span className="flex items-center gap-1"><ImageIcon className="h-3 w-3" /> Imágenes</span>
                 </label>
-                <textarea
-                  value={newImages}
-                  onChange={(e) => setNewImages(e.target.value)}
-                  placeholder="https://ejemplo.com/imagen1.jpg&#10;https://ejemplo.com/imagen2.jpg"
-                  rows={2}
-                  className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
-                />
+                <div className="flex gap-2 mb-2">
+                  <button
+                    onClick={() => setImageMode('url')}
+                    className={cn(
+                      'flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
+                      imageMode === 'url'
+                        ? 'border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300'
+                        : 'border-line text-muted hover:text-text',
+                    )}
+                  >
+                    🌐 URL
+                  </button>
+                  <button
+                    onClick={() => setImageMode('file')}
+                    className={cn(
+                      'flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition-all',
+                      imageMode === 'file'
+                        ? 'border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300'
+                        : 'border-line text-muted hover:text-text',
+                    )}
+                  >
+                    📁 Subir archivo
+                  </button>
+                </div>
+
+                {imageMode === 'url' ? (
+                  <textarea
+                    value={newImages}
+                    onChange={(e) => setNewImages(e.target.value)}
+                    placeholder="https://ejemplo.com/imagen1.jpg&#10;https://ejemplo.com/imagen2.jpg"
+                    rows={2}
+                    className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                  />
+                ) : (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-line bg-surface-2 px-4 py-6 text-center transition-all hover:border-fuchsia-400/40 hover:bg-surface/50"
+                    >
+                      <ImageIcon className="h-8 w-8 text-fuchsia-300/50" />
+                      <span className="text-xs text-muted">Haz click para seleccionar imágenes</span>
+                      <span className="text-[10px] text-faint">JPG, PNG, GIF (máx. 5MB cada una)</span>
+                    </label>
+                  </div>
+                )}
+
+                {uploadedImages.length > 0 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
+                    {uploadedImages.map((img, i) => (
+                      <div key={i} className="relative shrink-0">
+                        <img src={img} alt="" className="h-20 w-20 rounded-lg object-cover" />
+                        <button
+                          onClick={() => removeUploadedImage(i)}
+                          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white transition hover:bg-red-700"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
