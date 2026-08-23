@@ -514,16 +514,15 @@ export default function ForumPage() {
                     </button>
                   </div>
                 )}
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/20 text-[10px] font-bold text-fuchsia-300">
+                    T
+                  </div>
                   <input
                     type="text"
                     value={commentingOn === post.id ? newComment : ''}
-                    onFocus={() => {
-                      setCommentingOn(post.id);
-                      if (commentingOn && commentingOn !== post.id) {
-                        setNewComment('');
-                      }
-                    }}
+                    onFocus={() => setCommentingOn(post.id)}
+                    onClick={() => setCommentingOn(post.id)}
                     onChange={(e) => {
                       setCommentingOn(post.id);
                       setNewComment(e.target.value);
@@ -535,14 +534,14 @@ export default function ForumPage() {
                       }
                     }}
                     placeholder="Escribe un comentario..."
-                    className="flex-1 rounded-full border border-line bg-surface/80 px-4 py-2.5 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40 focus:ring-1 focus:ring-fuchsia-400/30"
+                    className="flex-1 rounded-full border border-line bg-surface-2 px-4 py-2 text-xs text-text placeholder-faint outline-none transition-all focus:border-fuchsia-400/50 focus:bg-surface/80 focus:ring-2 focus:ring-fuchsia-400/20"
                   />
                   <button
                     onClick={() => addComment(post.id)}
                     disabled={!newComment.trim() || commentingOn !== post.id}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white transition hover:opacity-90 disabled:opacity-30"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-md shadow-fuchsia-500/20 transition-all hover:scale-105 hover:opacity-90 disabled:opacity-20 disabled:shadow-none"
                   >
-                    <Send className="h-4 w-4" />
+                    <Send className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
