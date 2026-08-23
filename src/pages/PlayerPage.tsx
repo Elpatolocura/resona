@@ -206,7 +206,7 @@ export default function PlayerPage() {
                 <MoreVertical className="h-4 w-4" />
               </button>
               {showOptions && (
-                <div className="absolute bottom-full right-0 z-50 mb-2 min-w-40 origin-bottom animate-fade-in rounded-xl border border-white/20 bg-surface-2 p-1 shadow-2xl shadow-black/60">
+                <div className="absolute bottom-full right-0 z-50 mb-2 mr-2 min-w-40 origin-bottom animate-fade-in rounded-xl border border-white/20 bg-surface-2 p-1 shadow-2xl shadow-black/60">
                   <button onClick={() => { setShowReportModal(true); setShowOptions(false); }} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-text transition hover:bg-surface-3">
                     <Flag className="h-3.5 w-3.5" /> Denunciar
                   </button>
