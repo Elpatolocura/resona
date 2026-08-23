@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Film, Heart, Music2, Pause, Play, SkipBack, SkipForward, Tv, Disc3, Clock, User } from 'lucide-react';
+import { ArrowLeft, Film, Heart, Music2, Pause, Play, SkipBack, SkipForward, Tv, Disc3, Clock, User, Share2, Flag, X, Check, ExternalLink } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { useLibraryStore } from '../store/libraryStore';
 import { useMediaStore } from '../store/mediaStore';
@@ -43,6 +43,11 @@ export default function PlayerPage() {
   const [similarTracks, setSimilarTracks] = useState<AudiusTrack[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const currentTrack = currentMedia?.kind === 'music' ? currentMedia.track : null;
 
@@ -92,6 +97,37 @@ export default function PlayerPage() {
 
     fetchSimilar();
   }, [currentTrack?.id, activeFilter]);
+
+  const shareTrack = async () => {
+    if (!currentMedia) return;
+    const url = window.location.href;
+    const text = `${currentMedia.title} - ${subtitle} en Resona`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: text, url });
+      } catch {
+        // User cancelled
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        toast('Enlace copiado al portapapeles', 'success');
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        toast('Error al copiar enlace', 'error');
+      }
+    }
+  };
+
+  const reportTrack = () => {
+    if (!reportReason.trim()) return;
+    setShowReportModal(false);
+    setReportReason('');
+    setReportDetails('');
+    toast('Denuncia enviada. Gracias por reportar.', 'success');
+  };
 
   if (!currentMedia) {
     return (
@@ -257,6 +293,24 @@ export default function PlayerPage() {
               <VolumeControl />
             </div>
           </div>
+
+          {/* Share and Report buttons */}
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              onClick={shareTrack}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/20 hover:text-white"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Share2 className="h-3.5 w-3.5" />}
+              {copied ? 'Copiado' : 'Compartir'}
+            </button>
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/20 hover:text-white"
+            >
+              <Flag className="h-3.5 w-3.5" />
+              Denunciar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -362,6 +416,76 @@ export default function PlayerPage() {
           )}
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-line bg-surface p-6 shadow-2xl shadow-black/40">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-text">Denunciar canción</h3>
+              <button onClick={() => { setShowReportModal(false); setReportReason(''); setReportDetails(''); }} className="text-faint transition hover:text-text">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mb-4 flex items-center gap-3 rounded-2xl bg-surface-2 p-3">
+              {art && (
+                <img src={art} alt="" className="h-12 w-12 rounded-lg object-cover" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-text">{currentMedia.title}</p>
+                <p className="truncate text-xs text-muted">{subtitle}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {['Contenido inapropiado', 'Violación de derechos de autor', 'Spam o fraude', 'Otro'].map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setReportReason(reason)}
+                  className={cn(
+                    'w-full rounded-xl border px-4 py-2.5 text-left text-sm transition',
+                    reportReason === reason
+                      ? 'border-red-400/50 bg-red-500/15 text-red-300'
+                      : 'border-line text-muted hover:border-red-400/30 hover:text-text',
+                  )}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            {reportReason && (
+              <div className="mt-4">
+                <label className="mb-1 block text-xs font-semibold text-muted">Detalles adicionales (opcional)</label>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder="Describe el problema..."
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text placeholder-faint outline-none transition focus:border-red-400/40"
+                />
+              </div>
+            )}
+
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => { setShowReportModal(false); setReportReason(''); setReportDetails(''); }}
+                className="flex-1 rounded-full border border-line py-2.5 text-sm font-semibold text-muted transition hover:text-text"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={reportTrack}
+                disabled={!reportReason.trim()}
+                className="flex-1 rounded-full bg-red-600 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-30"
+              >
+                Denunciar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
