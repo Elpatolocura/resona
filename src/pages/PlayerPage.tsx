@@ -13,6 +13,7 @@ import ProgressBar from '../components/ProgressBar';
 import VolumeControl from '../components/VolumeControl';
 import QueuePanel from '../components/QueuePanel';
 import TrackMenu from '../components/TrackMenu';
+import Pagination from '../components/Pagination';
 import type { AudiusTrack } from '../types';
 
 type FilterType = 'all' | 'artist' | 'trending' | 'underground';
@@ -47,6 +48,7 @@ export default function PlayerPage() {
   const [similarTracks, setSimilarTracks] = useState<AudiusTrack[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [similarPage, setSimilarPage] = useState(1);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportDetails, setReportDetails] = useState('');
@@ -54,6 +56,9 @@ export default function PlayerPage() {
   const [showOptions, setShowOptions] = useState(false);
 
   const currentTrack = currentMedia?.kind === 'music' ? currentMedia.track : null;
+  const SIMILAR_PER_PAGE = 5;
+  const totalSimilarPages = Math.ceil(similarTracks.length / SIMILAR_PER_PAGE);
+  const paginatedSimilar = similarTracks.slice((similarPage - 1) * SIMILAR_PER_PAGE, similarPage * SIMILAR_PER_PAGE);
 
   useEffect(() => {
     if (!currentTrack) return;
@@ -84,7 +89,7 @@ export default function PlayerPage() {
             tracks = [...artistTracks.filter(t => t.id !== currentTrack.id).slice(0, 5), ...trendingTracks.filter(t => t.id !== currentTrack.id).slice(0, 10)];
             break;
         }
-        setSimilarTracks(tracks.slice(0, 10));
+        setSimilarTracks(tracks.slice(0, 30));
       } catch {
         setSimilarTracks([]);
       } finally {
@@ -247,7 +252,8 @@ export default function PlayerPage() {
               ) : similarTracks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center"><Music2 className="h-12 w-12 text-fuchsia-300/30" /><p className="mt-3 text-sm text-muted">No se encontraron canciones</p></div>
               ) : (
-                <div className="space-y-1">{similarTracks.map((track) => {
+                <>
+                <div className="space-y-1">{paginatedSimilar.map((track) => {
                   const trackArt = imageUrl(track.artwork, '150x150');
                   const isCurrentTrack = currentTrack?.id === track.id;
                   return (
@@ -266,6 +272,8 @@ export default function PlayerPage() {
                     </div>
                   );
                 })}</div>
+                {totalSimilarPages > 1 && <div className="px-2 pt-2"><Pagination currentPage={similarPage} totalPages={totalSimilarPages} onPageChange={setSimilarPage} /></div>}
+                </>
               )}
             </div>
           </div>
