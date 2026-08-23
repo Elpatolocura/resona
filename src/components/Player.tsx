@@ -134,7 +134,7 @@ export default function Player() {
           )}
         </div>
 
-        <div className="min-w-0 flex-1 lg:max-w-56">
+        <div className="min-w-0 flex-1 overflow-hidden lg:max-w-56">
           <p className="truncate text-sm font-semibold text-text">{currentMedia.title}</p>
           <p className="truncate text-xs text-muted">{subtitle}</p>
         </div>

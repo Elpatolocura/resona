@@ -171,9 +171,9 @@ export default function PlayerPage() {
               {isPlaying && <div className="absolute inset-0 rounded-full ring-2 ring-inset ring-fuchsia-400/30 animate-pulse" />}
             </div>
           )}
-          <div className="text-center w-full px-4">
-            <h1 className="text-xl font-bold text-white truncate drop-shadow-lg sm:text-2xl">{currentMedia.title}</h1>
-            <p className="mt-2 text-sm text-white/60 truncate">{subtitle}</p>
+          <div className="w-full overflow-hidden px-4 text-center">
+            <h1 className="truncate text-xl font-bold text-white drop-shadow-lg sm:text-2xl">{currentMedia.title}</h1>
+            <p className="mt-2 truncate text-sm text-white/60">{subtitle}</p>
           </div>
         </div>
 
