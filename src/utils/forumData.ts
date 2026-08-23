@@ -34,6 +34,43 @@ export const FORUM_CATEGORIES = [
 
 export const INITIAL_POSTS: ForumPost[] = [
   {
+    id: '0',
+    title: '📢 Actualización v2.0 - Mejoras en el foro y contenido en español',
+    body: `🚀 ¡Nueva actualización disponible! Estos son los cambios realizados:
+
+📌 ANTES:
+• El foro solo permitía ver publicaciones sin poder interactuar
+• No había opción de comentar directamente desde las tarjetas
+• Las denuncias no permitían agregar detalles
+• No se podían compartir ni guardar hilos
+• El contenido de películas/series incluía todos los idiomas
+
+📌 AHORA:
+✅ Comentarios directos en cada tarjeta sin necesidad de expandir
+✅ Botón de compartir hilos (copia link o usa API nativa)
+✅ Botón de guardar/favorito para hilos importantes
+✅ Denuncias con campo de texto para describir el problema
+✅ Contenido filtrado solo en español (películas y series)
+✅ Soporte para imágenes, videos y links externos en posts
+✅ Respuestas anidadas a comentarios
+✅ Emojis en publicaciones y comentarios
+✅ Badge de Admin para identificar posts oficiales
+✅ Sección de "Música underground" en la página de inicio
+✅ 5 páginas de contenido por categoría (antes solo 1)
+
+🎯 PRÓXIMAMENTE:
+• Sistema de notificaciones
+• Perfiles de usuario
+• Tags y etiquetas en publicaciones`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'],
+    comments: [],
+  },
+  {
     id: '1',
     title: 'Bienvenido a Resona - Reglas de la plataforma 🎬🎵',
     body: `¡Hola! Bienvenidos a Resona, tu plataforma de música, películas y series. Antes de comenzar, por favor lee las reglas:
