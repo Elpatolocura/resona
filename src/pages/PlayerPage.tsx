@@ -56,7 +56,7 @@ export default function PlayerPage() {
   const [showOptions, setShowOptions] = useState(false);
 
   const currentTrack = currentMedia?.kind === 'music' ? currentMedia.track : null;
-  const SIMILAR_PER_PAGE = 5;
+  const SIMILAR_PER_PAGE = 10;
   const totalSimilarPages = Math.ceil(similarTracks.length / SIMILAR_PER_PAGE);
   const paginatedSimilar = similarTracks.slice((similarPage - 1) * SIMILAR_PER_PAGE, similarPage * SIMILAR_PER_PAGE);
 
