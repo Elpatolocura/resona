@@ -84,7 +84,7 @@ export default function PlayerPage() {
             tracks = [...artistTracks.filter(t => t.id !== currentTrack.id).slice(0, 5), ...trendingTracks.filter(t => t.id !== currentTrack.id).slice(0, 10)];
             break;
         }
-        setSimilarTracks(tracks.slice(0, 15));
+        setSimilarTracks(tracks.slice(0, 12));
       } catch {
         setSimilarTracks([]);
       } finally {
