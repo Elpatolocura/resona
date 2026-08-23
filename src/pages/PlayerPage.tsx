@@ -144,10 +144,11 @@ export default function PlayerPage() {
   return (
     <div className="flex h-full animate-fade-in">
       {/* Left side - Player */}
-      <div className="relative flex h-full w-1/2 flex-col items-center justify-between p-6" style={{ background: art && !isVideo ? 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(30,10,40,0.9) 40%, rgba(15,5,20,1) 100%)' : 'linear-gradient(180deg, rgba(20,10,30,0.95) 0%, rgba(10,5,15,1) 100%)' }}>
+      <div className="relative flex h-full w-1/2 flex-col overflow-hidden" style={{ background: art && !isVideo ? 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(30,10,40,0.9) 40%, rgba(15,5,20,1) 100%)' : 'linear-gradient(180deg, rgba(20,10,30,0.95) 0%, rgba(10,5,15,1) 100%)' }}>
         {art && !isVideo && <div className="pointer-events-none absolute inset-0 opacity-20 blur-[120px]" style={{ backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
         
-        <div className="relative z-10 flex w-full max-w-lg items-center justify-between">
+        {/* Top bar - fixed */}
+        <div className="relative z-10 flex w-full shrink-0 items-center justify-between p-6 pb-0">
           <button onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition hover:bg-white/20 hover:text-white">
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -155,7 +156,8 @@ export default function PlayerPage() {
           <div className="h-10 w-10" />
         </div>
 
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-8 w-full max-w-lg">
+        {/* Center content - scrollable */}
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto w-full px-6 py-4">
           {isVideo ? (
             <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-2xl shadow-2xl shadow-black/60">
               {art ? <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center bg-surface-3">{currentMedia.kind === 'movie' ? <Film className="h-16 w-16 text-fuchsia-300/50" /> : <Tv className="h-16 w-16 text-fuchsia-300/50" />}</div>}
@@ -175,7 +177,8 @@ export default function PlayerPage() {
           </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-lg space-y-5">
+        {/* Bottom controls - fixed */}
+        <div className="relative z-10 w-full shrink-0 space-y-5 px-6 pb-6 pt-4">
           <div className="flex items-center gap-3">
             <span className="w-10 text-right text-[11px] tabular-nums text-white/50">{formatTime(progress)}</span>
             <ProgressBar value={progress} max={duration} onChange={seek} />
