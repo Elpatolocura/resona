@@ -6,14 +6,18 @@ import {
   Plus,
   X,
   Send,
-  Clock,
-  User,
   Film,
   Music,
   Tv,
   MessagesSquare,
   Flame,
-  ChevronDown,
+  ExternalLink,
+  Image as ImageIcon,
+  Video,
+  Link2,
+  Smile,
+  Reply,
+  Shield,
 } from 'lucide-react';
 import { cn } from '../utils/format';
 import { INITIAL_POSTS, type ForumPost, type ForumComment } from '../utils/forumData';
@@ -26,6 +30,98 @@ const CATEGORIES = [
   { id: 'general', label: 'General', icon: Flame },
 ];
 
+const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👎', '❤️', '🎬', '🎵', '📺', '🎮', '💯', '🙌', '🤔', '👀', '⭐', '🎉', '💬', '🎤', '🎸'];
+
+function renderText(text: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-fuchsia-300 underline transition hover:text-fuchsia-200">
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
+function CommentItem({
+  comment,
+  postId,
+  onToggleLike,
+  onReply,
+  depth = 0,
+}: {
+  comment: ForumComment;
+  postId: string;
+  onToggleLike: (postId: string, commentId: string) => void;
+  onReply: (postId: string, replyTo: string) => void;
+  depth?: number;
+}) {
+  const [showReplies, setShowReplies] = useState(true);
+  const hasReplies = comment.replies && comment.replies.length > 0;
+
+  return (
+    <div className={cn('flex gap-2.5', depth > 0 && 'ml-6 mt-2')}>
+      <div className={cn(
+        'flex shrink-0 items-center justify-center rounded-full bg-surface-3 text-[10px] font-bold text-muted',
+        depth > 0 ? 'h-6 w-6' : 'h-7 w-7',
+      )}>
+        {comment.author.charAt(0).toUpperCase()}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-text">{comment.author}</span>
+          <span className="text-[10px] text-faint">{comment.date}</span>
+        </div>
+        <p className="mt-0.5 text-xs text-muted leading-relaxed">{renderText(comment.text)}</p>
+        <div className="mt-1 flex items-center gap-3">
+          <button
+            onClick={() => onToggleLike(postId, comment.id)}
+            className={cn(
+              'inline-flex items-center gap-1 text-[10px] font-medium transition-colors',
+              comment.likedByMe ? 'text-fuchsia-300' : 'text-faint hover:text-fuchsia-300',
+            )}
+          >
+            <ThumbsUp className={cn('h-2.5 w-2.5', comment.likedByMe && 'fill-current')} />
+            {comment.likes}
+          </button>
+          <button
+            onClick={() => onReply(postId, comment.id)}
+            className="inline-flex items-center gap-1 text-[10px] font-medium text-faint transition-colors hover:text-fuchsia-300"
+          >
+            <Reply className="h-2.5 w-2.5" /> Responder
+          </button>
+        </div>
+        {hasReplies && (
+          <button
+            onClick={() => setShowReplies(!showReplies)}
+            className="mt-1 text-[10px] font-medium text-fuchsia-300 transition hover:text-fuchsia-200"
+          >
+            {showReplies ? 'Ocultar respuestas' : `Ver ${comment.replies!.length} respuesta(s)`}
+          </button>
+        )}
+        {showReplies && hasReplies && (
+          <div className="mt-2 space-y-2">
+            {comment.replies!.map((r) => (
+              <CommentItem
+                key={r.id}
+                comment={r}
+                postId={postId}
+                onToggleLike={onToggleLike}
+                onReply={onReply}
+                depth={depth + 1}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ForumPage() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<ForumPost[]>(INITIAL_POSTS);
@@ -37,6 +133,13 @@ export default function ForumPage() {
   const [newCategory, setNewCategory] = useState('general');
   const [newComment, setNewComment] = useState('');
   const [commentingOn, setCommentingOn] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ postId: string; commentId: string } | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [newImages, setNewImages] = useState('');
+  const [newVideo, setNewVideo] = useState('');
+  const [newLink, setNewLink] = useState('');
+  const [newLinkLabel, setNewLinkLabel] = useState('');
+  const [newLinks, setNewLinks] = useState<{ url: string; label: string }[]>([]);
 
   const filtered = activeCategory === 'all' ? posts : posts.filter((p) => p.category === activeCategory);
 
@@ -69,6 +172,7 @@ export default function ForumPage() {
 
   const addPost = () => {
     if (!newTitle.trim() || !newBody.trim()) return;
+    const images = newImages.trim() ? newImages.split('\n').filter((u) => u.trim()) : [];
     const post: ForumPost = {
       id: String(Date.now()),
       title: newTitle.trim(),
@@ -78,11 +182,17 @@ export default function ForumPage() {
       date: 'Ahora mismo',
       likes: 0,
       likedByMe: false,
+      ...(images.length > 0 && { images }),
+      ...(newVideo.trim() && { video: newVideo.trim() }),
+      ...(newLinks.length > 0 && { links: newLinks }),
       comments: [],
     };
     setPosts((prev) => [post, ...prev]);
     setNewTitle('');
     setNewBody('');
+    setNewImages('');
+    setNewVideo('');
+    setNewLinks([]);
     setShowNewPost(false);
   };
 
@@ -95,12 +205,41 @@ export default function ForumPage() {
       date: 'Ahora mismo',
       likes: 0,
       likedByMe: false,
+      ...(replyTo && replyTo.postId === postId && { replyTo: replyTo.commentId }),
     };
-    setPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, comments: [...p.comments, comment] } : p)),
-    );
+
+    if (replyTo && replyTo.postId === postId) {
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p;
+          const addReplyToComment = (comments: ForumComment[]): ForumComment[] =>
+            comments.map((c) => {
+              if (c.id === replyTo.commentId) {
+                return { ...c, replies: [...(c.replies ?? []), comment] };
+              }
+              if (c.replies && c.replies.length > 0) {
+                return { ...c, replies: addReplyToComment(c.replies) };
+              }
+              return c;
+            });
+          return { ...p, comments: addReplyToComment(p.comments) };
+        }),
+      );
+    } else {
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, comments: [...p.comments, comment] } : p)),
+      );
+    }
     setNewComment('');
+    setReplyTo(null);
     setCommentingOn(null);
+  };
+
+  const addLink = () => {
+    if (!newLink.trim()) return;
+    setNewLinks((prev) => [...prev, { url: newLink.trim(), label: newLinkLabel.trim() || newLink.trim() }]);
+    setNewLink('');
+    setNewLinkLabel('');
   };
 
   const catIcon = (cat: string) => {
@@ -174,13 +313,18 @@ export default function ForumPage() {
               <div className="p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/20 text-sm font-bold text-fuchsia-300">
-                    {post.author.charAt(0).toUpperCase()}
+                    {post.author === 'Admin' ? <Shield className="h-5 w-5" /> : post.author.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold', catColor(post.category))}>
                         {catIcon(post.category)} {CATEGORIES.find((c) => c.id === post.category)?.label}
                       </span>
+                      {post.author === 'Admin' && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-500/20 px-2 py-0.5 text-[10px] font-bold text-fuchsia-300">
+                          <Shield className="h-2.5 w-2.5" /> Admin
+                        </span>
+                      )}
                       <span className="text-xs text-faint">{post.date}</span>
                     </div>
                     <h3
@@ -189,7 +333,42 @@ export default function ForumPage() {
                     >
                       {post.title}
                     </h3>
-                    <p className="mt-1 text-xs text-muted leading-relaxed">{post.body}</p>
+                    <p className="mt-1 text-xs text-muted leading-relaxed whitespace-pre-line">{renderText(post.body)}</p>
+
+                    {post.images && post.images.length > 0 && (
+                      <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
+                        {post.images.map((img, i) => (
+                          <img key={i} src={img} alt="" className="h-32 rounded-xl object-cover" loading="lazy" />
+                        ))}
+                      </div>
+                    )}
+
+                    {post.video && (
+                      <div className="mt-3 aspect-video overflow-hidden rounded-xl">
+                        <iframe
+                          src={post.video}
+                          className="h-full w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    )}
+
+                    {post.links && post.links.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {post.links.map((link, i) => (
+                          <a
+                            key={i}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface/80 px-3 py-1.5 text-[11px] font-medium text-muted transition hover:border-fuchsia-400/40 hover:text-fuchsia-300"
+                          >
+                            <ExternalLink className="h-3 w-3" /> {link.label}
+                          </a>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="mt-3 flex items-center gap-4">
                       <button
@@ -219,30 +398,28 @@ export default function ForumPage() {
                   {post.comments.length === 0 && (
                     <p className="text-xs text-faint text-center py-2">Sé el primero en comentar</p>
                   )}
-                  {post.comments.map((c) => (
-                    <div key={c.id} className="flex gap-2.5">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-[10px] font-bold text-muted">
-                        {c.author.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-text">{c.author}</span>
-                          <span className="text-[10px] text-faint">{c.date}</span>
-                        </div>
-                        <p className="mt-0.5 text-xs text-muted leading-relaxed">{c.text}</p>
-                        <button
-                          onClick={() => toggleCommentLike(post.id, c.id)}
-                          className={cn(
-                            'mt-1 inline-flex items-center gap-1 text-[10px] font-medium transition-colors',
-                            c.likedByMe ? 'text-fuchsia-300' : 'text-faint hover:text-fuchsia-300',
-                          )}
-                        >
-                          <ThumbsUp className={cn('h-2.5 w-2.5', c.likedByMe && 'fill-current')} />
-                          {c.likes}
-                        </button>
-                      </div>
-                    </div>
+                  {post.comments.filter((c) => !c.replyTo).map((c) => (
+                    <CommentItem
+                      key={c.id}
+                      comment={c}
+                      postId={post.id}
+                      onToggleLike={toggleCommentLike}
+                      onReply={(pid, cid) => {
+                        setReplyTo({ postId: pid, commentId: cid });
+                        setCommentingOn(pid);
+                      }}
+                    />
                   ))}
+
+                  {replyTo && replyTo.postId === post.id && (
+                    <div className="flex items-center gap-2 rounded-full bg-fuchsia-500/10 px-3 py-1.5 text-[11px] text-fuchsia-300">
+                      <Reply className="h-3 w-3" />
+                      Respondiendo a un comentario
+                      <button onClick={() => setReplyTo(null)} className="ml-auto hover:text-white">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
 
                   <div className="flex gap-2 pt-2">
                     <input
@@ -259,7 +436,7 @@ export default function ForumPage() {
                           addComment(post.id);
                         }
                       }}
-                      placeholder="Escribe un comentario..."
+                      placeholder={replyTo && replyTo.postId === post.id ? 'Escribe tu respuesta...' : 'Escribe un comentario...'}
                       className="flex-1 rounded-full border border-line bg-surface/80 px-4 py-2 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
                     />
                     <button
@@ -279,7 +456,7 @@ export default function ForumPage() {
 
       {showNewPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl border border-line bg-surface p-6 shadow-2xl shadow-black/50 animate-rise">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-line bg-surface p-6 shadow-2xl shadow-black/50 animate-rise">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-extrabold">Nueva publicación</h2>
               <button
@@ -324,13 +501,104 @@ export default function ForumPage() {
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Contenido</label>
+                <div className="relative">
+                  <textarea
+                    value={newBody}
+                    onChange={(e) => setNewBody(e.target.value)}
+                    placeholder="Escribe tu publicación... Puedes usar emojis 😊"
+                    rows={4}
+                    className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                  />
+                  <button
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="absolute right-2 top-2 rounded-full p-1.5 text-muted transition hover:bg-surface-3 hover:text-text"
+                  >
+                    <Smile className="h-4 w-4" />
+                  </button>
+                  {showEmojiPicker && (
+                    <div className="absolute right-0 top-10 z-10 grid grid-cols-5 gap-1 rounded-xl border border-line bg-surface-2 p-2 shadow-xl">
+                      {EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          onClick={() => {
+                            setNewBody((prev) => prev + emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-lg transition hover:bg-surface-3"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">
+                  <span className="flex items-center gap-1"><ImageIcon className="h-3 w-3" /> Imágenes (URLs, una por línea)</span>
+                </label>
                 <textarea
-                  value={newBody}
-                  onChange={(e) => setNewBody(e.target.value)}
-                  placeholder="Escribe tu publicación..."
-                  rows={4}
-                  className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                  value={newImages}
+                  onChange={(e) => setNewImages(e.target.value)}
+                  placeholder="https://ejemplo.com/imagen1.jpg&#10;https://ejemplo.com/imagen2.jpg"
+                  rows={2}
+                  className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
                 />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">
+                  <span className="flex items-center gap-1"><Video className="h-3 w-3" /> Video (URL de YouTube, etc.)</span>
+                </label>
+                <input
+                  type="text"
+                  value={newVideo}
+                  onChange={(e) => setNewVideo(e.target.value)}
+                  placeholder="https://www.youtube.com/embed/..."
+                  className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">
+                  <span className="flex items-center gap-1"><Link2 className="h-3 w-3" /> Links externos</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newLinkLabel}
+                    onChange={(e) => setNewLinkLabel(e.target.value)}
+                    placeholder="Etiqueta"
+                    className="w-1/3 rounded-xl border border-line bg-surface-2 px-3 py-2 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                  />
+                  <input
+                    type="text"
+                    value={newLink}
+                    onChange={(e) => setNewLink(e.target.value)}
+                    placeholder="https://..."
+                    className="flex-1 rounded-xl border border-line bg-surface-2 px-3 py-2 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                  />
+                  <button
+                    onClick={addLink}
+                    disabled={!newLink.trim()}
+                    className="rounded-xl bg-surface-3 px-3 text-xs font-semibold text-muted transition hover:text-text disabled:opacity-30"
+                  >
+                    +
+                  </button>
+                </div>
+                {newLinks.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {newLinks.map((link, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-[10px] font-medium text-fuchsia-300">
+                        {link.label}
+                        <button onClick={() => setNewLinks((prev) => prev.filter((_, j) => j !== i))} className="hover:text-white">
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button
