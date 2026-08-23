@@ -12,6 +12,7 @@ import { audius } from '../services/audius';
 import ProgressBar from '../components/ProgressBar';
 import VolumeControl from '../components/VolumeControl';
 import QueuePanel from '../components/QueuePanel';
+import TrackMenu from '../components/TrackMenu';
 import type { AudiusTrack } from '../types';
 
 type FilterType = 'all' | 'artist' | 'trending' | 'underground';
@@ -247,6 +248,7 @@ export default function PlayerPage() {
                         <p className={cn('truncate text-sm font-medium', isCurrentTrack ? 'text-fuchsia-300' : 'text-text')}>{track.title}</p>
                         <p className="truncate text-xs text-muted">{track.user?.name}</p>
                       </div>
+                      <TrackMenu track={track} align="left" className="shrink-0" />
                       <div className="flex items-center gap-2 text-xs text-faint"><Clock className="h-3 w-3" />{formatTime(track.duration)}</div>
                     </div>
                   );
