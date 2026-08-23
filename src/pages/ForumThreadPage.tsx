@@ -15,6 +15,10 @@ import {
   Reply,
   X,
   Smile,
+  Share2,
+  Flag,
+  Heart,
+  Check,
 } from 'lucide-react';
 import { cn } from '../utils/format';
 import { INITIAL_POSTS, type ForumPost, type ForumComment } from '../utils/forumData';
@@ -143,6 +147,11 @@ export default function ForumThreadPage() {
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isReported, setIsReported] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const post = posts.find((p) => p.id === id);
 
@@ -189,6 +198,26 @@ export default function ForumThreadPage() {
           : p,
       ),
     );
+  };
+
+  const sharePost = async () => {
+    const url = `${window.location.origin}/#/forum/${post.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: post.title, text: post.body.slice(0, 100), url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const reportPost = () => {
+    if (!reportReason.trim()) return;
+    setIsReported(true);
+    setShowReportModal(false);
+    setReportReason('');
   };
 
   const addComment = () => {
@@ -309,7 +338,7 @@ export default function ForumThreadPage() {
               </div>
             )}
 
-            <div className="mt-5 flex items-center gap-5 border-t border-line pt-4">
+            <div className="mt-5 flex flex-wrap items-center gap-4 border-t border-line pt-4">
               <button
                 onClick={toggleLike}
                 className={cn(
@@ -324,6 +353,38 @@ export default function ForumThreadPage() {
                 <MessageSquare className="h-4.5 w-4.5" />
                 {currentPost.comments.length} {currentPost.comments.length === 1 ? 'comentario' : 'comentarios'}
               </span>
+              <button
+                onClick={() => setIsFavorite(!isFavorite)}
+                className={cn(
+                  'inline-flex items-center gap-2 text-sm font-semibold transition-colors',
+                  isFavorite ? 'text-pink-400' : 'text-muted hover:text-pink-400',
+                )}
+              >
+                <Heart className={cn('h-4.5 w-4.5', isFavorite && 'fill-current')} />
+                {isFavorite ? 'Guardado' : 'Guardar'}
+              </button>
+              <button
+                onClick={sharePost}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-fuchsia-300"
+              >
+                {copied ? (
+                  <><Check className="h-4.5 w-4.5 text-emerald-400" /> <span className="text-emerald-400">Copiado</span></>
+                ) : (
+                  <><Share2 className="h-4.5 w-4.5" /> Compartir</>
+                )}
+              </button>
+              {!isReported ? (
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition-colors hover:text-red-400"
+                >
+                  <Flag className="h-4.5 w-4.5" /> Denunciar
+                </button>
+              ) : (
+                <span className="inline-flex items-center gap-2 text-sm text-red-400">
+                  <Flag className="h-4.5 w-4.5 fill-current" /> Denunciado
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -414,6 +475,56 @@ export default function ForumThreadPage() {
           ))}
         </div>
       </div>
+
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-line bg-surface p-6 shadow-2xl shadow-black/50 animate-rise">
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-extrabold text-red-400">
+                <Flag className="h-5 w-5" /> Denunciar publicación
+              </h2>
+              <button
+                onClick={() => { setShowReportModal(false); setReportReason(''); }}
+                className="rounded-full p-1.5 text-muted transition hover:bg-surface-2 hover:text-text"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-muted">Selecciona el motivo de la denuncia:</p>
+            <div className="mt-3 space-y-2">
+              {['Contenido ofensivo', 'Spam', 'Contenido ilegal', 'Información falsa', 'Otro'].map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setReportReason(reason)}
+                  className={cn(
+                    'w-full rounded-xl border px-4 py-2.5 text-left text-sm font-medium transition-all',
+                    reportReason === reason
+                      ? 'border-red-400/40 bg-red-500/15 text-red-300'
+                      : 'border-line text-muted hover:border-red-400/30 hover:text-text',
+                  )}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => { setShowReportModal(false); setReportReason(''); }}
+                className="flex-1 rounded-full border border-line py-2.5 text-sm font-semibold text-muted transition hover:text-text"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={reportPost}
+                disabled={!reportReason.trim()}
+                className="flex-1 rounded-full bg-red-600 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-30"
+              >
+                Denunciar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

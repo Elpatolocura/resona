@@ -18,6 +18,10 @@ import {
   Smile,
   Reply,
   Shield,
+  Share2,
+  Flag,
+  Heart,
+  Check,
 } from 'lucide-react';
 import { cn } from '../utils/format';
 import { INITIAL_POSTS, type ForumPost, type ForumComment } from '../utils/forumData';
@@ -140,8 +144,42 @@ export default function ForumPage() {
   const [newLink, setNewLink] = useState('');
   const [newLinkLabel, setNewLinkLabel] = useState('');
   const [newLinks, setNewLinks] = useState<{ url: string; label: string }[]>([]);
+  const [favoritePosts, setFavoritePosts] = useState<Set<string>>(new Set());
+  const [reportedPosts, setReportedPosts] = useState<Set<string>>(new Set());
+  const [showReportModal, setShowReportModal] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filtered = activeCategory === 'all' ? posts : posts.filter((p) => p.category === activeCategory);
+
+  const toggleFavorite = (postId: string) => {
+    setFavoritePosts((prev) => {
+      const next = new Set(prev);
+      if (next.has(postId)) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+  };
+
+  const sharePost = async (post: ForumPost) => {
+    const url = `${window.location.origin}/#/forum/${post.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: post.title, text: post.body.slice(0, 100), url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(post.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
+
+  const reportPost = (postId: string) => {
+    if (!reportReason.trim()) return;
+    setReportedPosts((prev) => new Set(prev).add(postId));
+    setShowReportModal(null);
+    setReportReason('');
+  };
 
   const toggleLike = (postId: string) => {
     setPosts((prev) =>
@@ -399,9 +437,37 @@ export default function ForumPage() {
                         <MessageSquare className="h-3.5 w-3.5" />
                         {totalComments} {totalComments === 1 ? 'comentario' : 'comentarios'}
                       </button>
-                      {hasMedia && (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-faint">
-                          <ImageIcon className="h-3 w-3" /> Multimedia
+                      <button
+                        onClick={() => toggleFavorite(post.id)}
+                        className={cn(
+                          'inline-flex items-center gap-1.5 text-xs font-medium transition-colors',
+                          favoritePosts.has(post.id) ? 'text-pink-400' : 'text-faint hover:text-pink-400',
+                        )}
+                      >
+                        <Heart className={cn('h-3.5 w-3.5', favoritePosts.has(post.id) && 'fill-current')} />
+                        {favoritePosts.has(post.id) ? 'Guardado' : 'Guardar'}
+                      </button>
+                      <button
+                        onClick={() => sharePost(post)}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-faint transition-colors hover:text-fuchsia-300"
+                      >
+                        {copiedId === post.id ? (
+                          <><Check className="h-3.5 w-3.5 text-emerald-400" /> <span className="text-emerald-400">Copiado</span></>
+                        ) : (
+                          <><Share2 className="h-3.5 w-3.5" /> Compartir</>
+                        )}
+                      </button>
+                      {!reportedPosts.has(post.id) && (
+                        <button
+                          onClick={() => setShowReportModal(post.id)}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-faint transition-colors hover:text-red-400"
+                        >
+                          <Flag className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {reportedPosts.has(post.id) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-red-400">
+                          <Flag className="h-3 w-3 fill-current" /> Denunciado
                         </span>
                       )}
                     </div>
@@ -630,6 +696,56 @@ export default function ForumPage() {
                 className="w-full rounded-full bg-brand py-3 text-sm font-bold text-white shadow-lg shadow-fuchsia-500/25 transition hover:opacity-90 disabled:opacity-30"
               >
                 Publicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-line bg-surface p-6 shadow-2xl shadow-black/50 animate-rise">
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-extrabold text-red-400">
+                <Flag className="h-5 w-5" /> Denunciar publicación
+              </h2>
+              <button
+                onClick={() => { setShowReportModal(null); setReportReason(''); }}
+                className="rounded-full p-1.5 text-muted transition hover:bg-surface-2 hover:text-text"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-muted">Selecciona el motivo de la denuncia:</p>
+            <div className="mt-3 space-y-2">
+              {['Contenido ofensivo', 'Spam', 'Contenido ilegal', 'Información falsa', 'Otro'].map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setReportReason(reason)}
+                  className={cn(
+                    'w-full rounded-xl border px-4 py-2.5 text-left text-sm font-medium transition-all',
+                    reportReason === reason
+                      ? 'border-red-400/40 bg-red-500/15 text-red-300'
+                      : 'border-line text-muted hover:border-red-400/30 hover:text-text',
+                  )}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => { setShowReportModal(null); setReportReason(''); }}
+                className="flex-1 rounded-full border border-line py-2.5 text-sm font-semibold text-muted transition hover:text-text"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => reportPost(showReportModal)}
+                disabled={!reportReason.trim()}
+                className="flex-1 rounded-full bg-red-600 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-30"
+              >
+                Denunciar
               </button>
             </div>
           </div>
