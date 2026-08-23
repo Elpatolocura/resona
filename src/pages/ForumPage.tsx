@@ -148,6 +148,7 @@ export default function ForumPage() {
   const [reportedPosts, setReportedPosts] = useState<Set<string>>(new Set());
   const [showReportModal, setShowReportModal] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filtered = activeCategory === 'all' ? posts : posts.filter((p) => p.category === activeCategory);
@@ -179,6 +180,7 @@ export default function ForumPage() {
     setReportedPosts((prev) => new Set(prev).add(postId));
     setShowReportModal(null);
     setReportReason('');
+    setReportDetails('');
   };
 
   const toggleLike = (postId: string) => {
@@ -499,45 +501,46 @@ export default function ForumPage() {
                       }}
                     />
                   ))}
-
-                  {replyTo && replyTo.postId === post.id && (
-                    <div className="flex items-center gap-2 rounded-full bg-fuchsia-500/10 px-3 py-1.5 text-[11px] text-fuchsia-300">
-                      <Reply className="h-3 w-3" />
-                      Respondiendo a un comentario
-                      <button onClick={() => setReplyTo(null)} className="ml-auto hover:text-white">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 pt-2">
-                    <input
-                      type="text"
-                      value={commentingOn === post.id ? newComment : ''}
-                      onFocus={() => setCommentingOn(post.id)}
-                      onChange={(e) => {
-                        setCommentingOn(post.id);
-                        setNewComment(e.target.value);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          addComment(post.id);
-                        }
-                      }}
-                      placeholder={replyTo && replyTo.postId === post.id ? 'Escribe tu respuesta...' : 'Escribe un comentario...'}
-                      className="flex-1 rounded-full border border-line bg-surface/80 px-4 py-2 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
-                    />
-                    <button
-                      onClick={() => addComment(post.id)}
-                      disabled={!newComment.trim() || commentingOn !== post.id}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-white transition hover:opacity-90 disabled:opacity-30"
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
                 </div>
               )}
+
+              <div className="p-4 pt-3">
+                {replyTo && replyTo.postId === post.id && (
+                  <div className="mb-2 flex items-center gap-2 rounded-full bg-fuchsia-500/10 px-3 py-1.5 text-[11px] text-fuchsia-300">
+                    <Reply className="h-3 w-3" />
+                    Respondiendo a un comentario
+                    <button onClick={() => setReplyTo(null)} className="ml-auto hover:text-white">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={commentingOn === post.id ? newComment : ''}
+                    onFocus={() => setCommentingOn(post.id)}
+                    onChange={(e) => {
+                      setCommentingOn(post.id);
+                      setNewComment(e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        addComment(post.id);
+                      }
+                    }}
+                    placeholder={replyTo && replyTo.postId === post.id ? 'Escribe tu respuesta...' : 'Escribe un comentario...'}
+                    className="flex-1 rounded-full border border-line bg-surface/80 px-4 py-2 text-xs text-text placeholder-faint outline-none transition focus:border-fuchsia-400/40"
+                  />
+                  <button
+                    onClick={() => addComment(post.id)}
+                    disabled={!newComment.trim() || commentingOn !== post.id}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-white transition hover:opacity-90 disabled:opacity-30"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
           );
         })}
@@ -733,9 +736,21 @@ export default function ForumPage() {
                 </button>
               ))}
             </div>
+            {reportReason && (
+              <div className="mt-3">
+                <label className="mb-1 block text-xs font-semibold text-muted">Detalles adicionales (opcional)</label>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder="Describe el problema con más detalle..."
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text placeholder-faint outline-none transition focus:border-red-400/40"
+                />
+              </div>
+            )}
             <div className="mt-5 flex gap-3">
               <button
-                onClick={() => { setShowReportModal(null); setReportReason(''); }}
+                onClick={() => { setShowReportModal(null); setReportReason(''); setReportDetails(''); }}
                 className="flex-1 rounded-full border border-line py-2.5 text-sm font-semibold text-muted transition hover:text-text"
               >
                 Cancelar

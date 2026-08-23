@@ -151,6 +151,7 @@ export default function ForumThreadPage() {
   const [isReported, setIsReported] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
   const [copied, setCopied] = useState(false);
 
   const post = posts.find((p) => p.id === id);
@@ -218,6 +219,7 @@ export default function ForumThreadPage() {
     setIsReported(true);
     setShowReportModal(false);
     setReportReason('');
+    setReportDetails('');
   };
 
   const addComment = () => {
@@ -507,9 +509,21 @@ export default function ForumThreadPage() {
                 </button>
               ))}
             </div>
+            {reportReason && (
+              <div className="mt-3">
+                <label className="mb-1 block text-xs font-semibold text-muted">Detalles adicionales (opcional)</label>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder="Describe el problema con más detalle..."
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text placeholder-faint outline-none transition focus:border-red-400/40"
+                />
+              </div>
+            )}
             <div className="mt-5 flex gap-3">
               <button
-                onClick={() => { setShowReportModal(false); setReportReason(''); }}
+                onClick={() => { setShowReportModal(false); setReportReason(''); setReportDetails(''); }}
                 className="flex-1 rounded-full border border-line py-2.5 text-sm font-semibold text-muted transition hover:text-text"
               >
                 Cancelar
