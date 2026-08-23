@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Film, Heart, ListMusic, Music2, Pause, Play, SkipBack, SkipForward, Tv, X, Volume2 } from 'lucide-react';
+import { Film, Heart, ListMusic, Music2, Pause, Play, SkipBack, SkipForward, Tv, X, Volume2, Maximize2, Minimize2 } from 'lucide-react';
 import type { Media } from '../types';
 import { usePlayerStore } from '../store/playerStore';
 import { useLibraryStore } from '../store/libraryStore';
@@ -27,6 +27,7 @@ export default function Player() {
   const seek = usePlayerStore((s) => s.seek);
   const toggleQueue = usePlayerStore((s) => s.toggleQueue);
   const [showMobileVolume, setShowMobileVolume] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const favorites = useLibraryStore((s) => s.favorites);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
@@ -102,7 +103,13 @@ export default function Player() {
       )}
 
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 lg:h-20 lg:px-6">
-        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg shadow-lg lg:h-14 lg:w-14">
+        <div
+          onClick={() => !isVideo && setExpanded(true)}
+          className={cn(
+            'relative h-11 w-11 shrink-0 overflow-hidden rounded-lg shadow-lg lg:h-14 lg:w-14',
+            !isVideo && 'cursor-pointer transition hover:ring-2 hover:ring-fuchsia-400/50',
+          )}
+        >
           {art ? (
             <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
           ) : (
@@ -132,6 +139,16 @@ export default function Player() {
           <p className="truncate text-sm font-semibold text-text">{currentMedia.title}</p>
           <p className="truncate text-xs text-muted">{subtitle}</p>
         </div>
+
+        {!isVideo && (
+          <button
+            onClick={() => setExpanded(true)}
+            aria-label="Expandir reproductor"
+            className="hidden shrink-0 rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-fuchsia-300 lg:block"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        )}
 
         <button
           onClick={handleFavorite}
@@ -263,6 +280,87 @@ export default function Player() {
       </div>
 
       {showQueue && <QueuePanel />}
+
+      {expanded && !isVideo && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-surface via-surface to-bg p-6 backdrop-blur-xl">
+          <button
+            onClick={() => setExpanded(false)}
+            className="absolute right-4 top-4 rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-text"
+          >
+            <Minimize2 className="h-5 w-5" />
+          </button>
+
+          <div className="flex flex-col items-center gap-6 w-full max-w-md">
+            <div className="relative h-64 w-64 overflow-hidden rounded-3xl shadow-2xl shadow-black/50 sm:h-72 sm:w-72">
+              {art ? (
+                <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-brand/25">
+                  <Music2 className="h-16 w-16 text-fuchsia-300/50" />
+                </div>
+              )}
+              {isPlaying && (
+                <div className="absolute inset-0 rounded-3xl ring-2 ring-inset ring-fuchsia-400/40" />
+              )}
+            </div>
+
+            <div className="text-center w-full">
+              <h2 className="text-xl font-bold text-text truncate">{currentMedia.title}</h2>
+              <p className="mt-1 text-sm text-muted truncate">{subtitle}</p>
+            </div>
+
+            <div className="w-full">
+              <div className="flex items-center gap-3">
+                <span className="w-10 text-right text-xs tabular-nums text-faint">
+                  {formatTime(progress)}
+                </span>
+                <ProgressBar value={progress} max={duration} onChange={seek} />
+                <span className="w-10 text-xs tabular-nums text-faint">
+                  {formatTime(duration)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleFavorite}
+                aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                className="rounded-full p-3 text-muted transition hover:bg-surface-2 hover:text-text"
+              >
+                <Heart className={cn('h-6 w-6', isFav && 'fill-accent-2 text-accent-2')} />
+              </button>
+              <button
+                onClick={prev}
+                aria-label="Anterior"
+                className="rounded-full p-3 text-text transition hover:text-fuchsia-300"
+              >
+                <SkipBack className="h-7 w-7 fill-current" />
+              </button>
+              <button
+                onClick={togglePlay}
+                aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-text text-bg shadow-lg transition-all hover:scale-105 active:scale-95"
+              >
+                {isLoading ? (
+                  <div className="h-7 w-7 animate-spin rounded-full border-2 border-bg border-t-transparent" />
+                ) : isPlaying ? (
+                  <Pause className="h-7 w-7 fill-current" />
+                ) : (
+                  <Play className="ml-1 h-7 w-7 fill-current" />
+                )}
+              </button>
+              <button
+                onClick={next}
+                aria-label="Siguiente"
+                className="rounded-full p-3 text-text transition hover:text-fuchsia-300"
+              >
+                <SkipForward className="h-7 w-7 fill-current" />
+              </button>
+              <VolumeControl />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
