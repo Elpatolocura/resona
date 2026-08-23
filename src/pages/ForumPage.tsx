@@ -158,8 +158,12 @@ export default function ForumPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { forumFavorites, toggleForumFavorite } = useMediaStore();
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 5;
 
   const filtered = activeCategory === 'all' ? posts : posts.filter((p) => p.category === activeCategory);
+  const totalPages = Math.ceil(filtered.length / postsPerPage);
+  const paginatedPosts = filtered.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
 
   const toggleFavorite = (postId: string) => {
     toggleForumFavorite(postId);
@@ -375,7 +379,7 @@ export default function ForumPage() {
         {CATEGORIES.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            onClick={() => setActiveCategory(id)}
+            onClick={() => { setActiveCategory(id); setCurrentPage(1); }}
             className={cn(
               'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 text-xs font-semibold transition-all',
               activeCategory === id
@@ -396,7 +400,7 @@ export default function ForumPage() {
       )}
 
       <div className="space-y-3">
-        {filtered.map((post) => {
+        {paginatedPosts.map((post) => {
           const expanded = expandedPost === post.id;
           const textPreview = post.body.length > 150 ? post.body.slice(0, 150) + '...' : post.body;
           const hasMedia = (post.images && post.images.length > 0) || post.video;
@@ -553,6 +557,41 @@ export default function ForumPage() {
           );
         })}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="rounded-full border border-line bg-surface/60 px-4 py-2 text-xs font-semibold text-muted transition hover:border-fuchsia-400/40 hover:text-text disabled:opacity-30"
+          >
+            ← Anterior
+          </button>
+          <div className="flex gap-1.5">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-all',
+                  currentPage === page
+                    ? 'bg-brand text-white shadow-lg shadow-fuchsia-500/25'
+                    : 'bg-surface/60 text-muted hover:bg-surface-2 hover:text-text',
+                )}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="rounded-full border border-line bg-surface/60 px-4 py-2 text-xs font-semibold text-muted transition hover:border-fuchsia-400/40 hover:text-text disabled:opacity-30"
+          >
+            Siguiente →
+          </button>
+        </div>
+      )}
 
       {showNewPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
