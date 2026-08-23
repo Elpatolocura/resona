@@ -433,7 +433,7 @@ export default function ForumPage() {
                         {post.likes}
                       </button>
                       <button
-                        onClick={() => setExpandedPost(expanded ? null : post.id)}
+                        onClick={() => navigate(`/forum/${post.id}`)}
                         className="inline-flex items-center gap-1.5 text-xs font-medium text-faint transition-colors hover:text-fuchsia-300"
                       >
                         <MessageSquare className="h-3.5 w-3.5" />
@@ -483,26 +483,6 @@ export default function ForumPage() {
                   </div>
                 </div>
               </div>
-
-              {expanded && (
-                <div className="border-t border-line bg-surface/40 p-4 space-y-3">
-                  {post.comments.length === 0 && (
-                    <p className="text-xs text-faint text-center py-2">Sé el primero en comentar</p>
-                  )}
-                  {post.comments.filter((c) => !c.replyTo).map((c) => (
-                    <CommentItem
-                      key={c.id}
-                      comment={c}
-                      postId={post.id}
-                      onToggleLike={toggleCommentLike}
-                      onReply={(pid, cid) => {
-                        setReplyTo({ postId: pid, commentId: cid });
-                        setCommentingOn(pid);
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
             </div>
           );
         })}
