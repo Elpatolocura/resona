@@ -35,6 +35,49 @@ export const FORUM_CATEGORIES = [
 export const INITIAL_POSTS: ForumPost[] = [
   {
     id: '0',
+    title: '📢 Actualización v2.1 - Foro mejorado y subida de imágenes',
+    body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.0:
+
+📌 ANTES (v2.0):
+• El botón de comentarios expandía los comentarios en la tarjeta
+• No se podía comentar directamente desde la página principal
+• Solo se podían agregar imágenes por URL
+• Las denuncias no tenían campo de texto adicional
+• No había opción de subir archivos desde el ordenador
+
+📌 AHORA (v2.1):
+✅ Botón de comentarios redirige a la vista completa del hilo
+✅ Input de comentarios eliminado de la página principal (solo en hilo)
+✅ Subida de imágenes desde el ordenador (drag & drop)
+✅ Modal de nueva publicación con selector URL/Archivo
+✅ Preview de imágenes antes de publicar
+✅ Campo de texto opcional en denuncias para describir el problema
+✅ Sección de "Música underground" agregada en página de inicio
+✅ 5 páginas de contenido por categoría (antes solo 1)
+✅ Artistas populares: 12 → 20
+✅ Álbumes: 12 → 18
+✅ Playlists: 12 → 18
+
+🎯 CAMBIOS TÉCNICOS:
+• Filtrado de contenido en español solo (original_language=es)
+• Consultas a TMDB con parámetro with_original_language=es
+• MultiEmbed como servidor predeterminado de video
+• Changelog automático en el foro después de cada actualización
+
+🎯 PRÓXIMAMENTE:
+• Sistema de notificaciones
+• Perfiles de usuario
+• Tags y etiquetas en publicaciones`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80'],
+    comments: [],
+  },
+  {
+    id: '1',
     title: '📢 Actualización v2.0 - Mejoras en el foro y contenido en español',
     body: `🚀 ¡Nueva actualización disponible! Estos son los cambios realizados:
 
