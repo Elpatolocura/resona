@@ -86,7 +86,7 @@ export default function Player() {
   const subtitle = currentMedia.kind === 'music' ? currentMedia.subtitle : mediaSubtitle(currentMedia);
 
   return (
-    <div className="fixed inset-x-0 bottom-16 z-40 border-t border-line bg-surface/95 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl lg:bottom-0">
+    <div className="fixed inset-x-0 bottom-16 z-40 border-t border-line bg-surface/95 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl lg:bottom-0 lg:left-64">
       {!isVideo && (
         <div className="px-3 pt-2 lg:hidden">
           <div className="flex items-center gap-2">
