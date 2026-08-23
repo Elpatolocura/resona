@@ -282,79 +282,111 @@ export default function Player() {
       {showQueue && <QueuePanel />}
 
       {expanded && !isVideo && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-surface via-surface to-bg p-6 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 backdrop-blur-2xl"
+          style={{
+            background: art
+              ? `linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(30,10,40,0.95) 50%, rgba(20,5,30,1) 100%)`
+              : 'linear-gradient(180deg, rgba(20,10,30,0.98) 0%, rgba(10,5,15,1) 100%)',
+          }}
+        >
+          {/* Close button */}
           <button
             onClick={() => setExpanded(false)}
-            className="absolute right-4 top-4 rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-text"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/80 backdrop-blur-sm transition hover:bg-white/20 hover:text-white"
           >
             <Minimize2 className="h-5 w-5" />
           </button>
 
-          <div className="flex flex-col items-center gap-6 w-full max-w-md">
-            <div className="relative h-64 w-64 overflow-hidden rounded-3xl shadow-2xl shadow-black/50 sm:h-72 sm:w-72">
-              {art ? (
-                <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-brand/25">
-                  <Music2 className="h-16 w-16 text-fuchsia-300/50" />
-                </div>
-              )}
+          {/* Background glow from album art */}
+          {art && (
+            <div
+              className="pointer-events-none absolute inset-0 opacity-30 blur-[100px]"
+              style={{ backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+            />
+          )}
+
+          <div className="relative flex flex-col items-center gap-8 w-full max-w-sm">
+            {/* Album Art with vinyl effect */}
+            <div className="relative">
+              <div
+                className={cn(
+                  'h-64 w-64 overflow-hidden rounded-full shadow-2xl shadow-black/60 sm:h-72 sm:w-72',
+                  isPlaying && 'animate-[spin_20s_linear_infinite]',
+                )}
+                style={{
+                  animationPlayState: isPlaying ? 'running' : 'paused',
+                }}
+              >
+                {art ? (
+                  <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand/40 to-surface-3">
+                    <Music2 className="h-20 w-20 text-fuchsia-300/50" />
+                  </div>
+                )}
+              </div>
+              {/* Center hole for vinyl effect */}
+              <div className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface shadow-inner" />
+              {/* Glow ring when playing */}
               {isPlaying && (
-                <div className="absolute inset-0 rounded-3xl ring-2 ring-inset ring-fuchsia-400/40" />
+                <div className="absolute inset-0 rounded-full ring-2 ring-inset ring-fuchsia-400/30 animate-pulse" />
               )}
             </div>
 
-            <div className="text-center w-full">
-              <h2 className="text-xl font-bold text-text truncate">{currentMedia.title}</h2>
-              <p className="mt-1 text-sm text-muted truncate">{subtitle}</p>
+            {/* Song info */}
+            <div className="text-center w-full px-4">
+              <h2 className="text-2xl font-bold text-white truncate drop-shadow-lg">{currentMedia.title}</h2>
+              <p className="mt-2 text-base text-white/60 truncate">{subtitle}</p>
             </div>
 
-            <div className="w-full">
+            {/* Progress bar */}
+            <div className="w-full px-2">
               <div className="flex items-center gap-3">
-                <span className="w-10 text-right text-xs tabular-nums text-faint">
+                <span className="w-12 text-right text-xs tabular-nums text-white/50">
                   {formatTime(progress)}
                 </span>
                 <ProgressBar value={progress} max={duration} onChange={seek} />
-                <span className="w-10 text-xs tabular-nums text-faint">
+                <span className="w-12 text-xs tabular-nums text-white/50">
                   {formatTime(duration)}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Controls */}
+            <div className="flex items-center gap-6">
               <button
                 onClick={handleFavorite}
                 aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-                className="rounded-full p-3 text-muted transition hover:bg-surface-2 hover:text-text"
+                className="rounded-full p-3 text-white/60 transition hover:text-fuchsia-400"
               >
-                <Heart className={cn('h-6 w-6', isFav && 'fill-accent-2 text-accent-2')} />
+                <Heart className={cn('h-6 w-6', isFav && 'fill-fuchsia-400 text-fuchsia-400')} />
               </button>
               <button
                 onClick={prev}
                 aria-label="Anterior"
-                className="rounded-full p-3 text-text transition hover:text-fuchsia-300"
+                className="rounded-full p-3 text-white/80 transition hover:text-white"
               >
-                <SkipBack className="h-7 w-7 fill-current" />
+                <SkipBack className="h-8 w-8 fill-current" />
               </button>
               <button
                 onClick={togglePlay}
                 aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-text text-bg shadow-lg transition-all hover:scale-105 active:scale-95"
+                className="flex h-18 w-18 items-center justify-center rounded-full bg-white text-surface shadow-xl shadow-white/20 transition-all hover:scale-105 active:scale-95"
               >
                 {isLoading ? (
-                  <div className="h-7 w-7 animate-spin rounded-full border-2 border-bg border-t-transparent" />
+                  <div className="h-8 w-8 animate-spin rounded-full border-3 border-surface border-t-transparent" />
                 ) : isPlaying ? (
-                  <Pause className="h-7 w-7 fill-current" />
+                  <Pause className="h-8 w-8 fill-current" />
                 ) : (
-                  <Play className="ml-1 h-7 w-7 fill-current" />
+                  <Play className="ml-1 h-8 w-8 fill-current" />
                 )}
               </button>
               <button
                 onClick={next}
                 aria-label="Siguiente"
-                className="rounded-full p-3 text-text transition hover:text-fuchsia-300"
+                className="rounded-full p-3 text-white/80 transition hover:text-white"
               >
-                <SkipForward className="h-7 w-7 fill-current" />
+                <SkipForward className="h-8 w-8 fill-current" />
               </button>
               <VolumeControl />
             </div>
