@@ -35,6 +35,51 @@ export const FORUM_CATEGORIES = [
 export const INITIAL_POSTS: ForumPost[] = [
   {
     id: '0',
+    title: '📢 Actualización v2.2 - Reproductor mejorado y paginación',
+    body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.1:
+
+📌 ANTES (v2.1):
+• El reproductor de música solo se veía en la barra inferior
+• No había opción de ver el reproductor en pantalla completa
+• Las imágenes de los posts no se podían ver en grande
+• No había paginación en las páginas de películas/series
+• Los favoritos del foro no se guardaban en la biblioteca
+• No había selector de cuántos elementos mostrar por página
+
+📌 AHORA (v2.2):
+✅ Reproductor expandible con vista fullscreen para música
+✅ Botón de maximizar para abrir reproductor completo
+✅ Click en portada del reproductor abre vista ampliada
+✅ Control de volumen disponible en móvil (popup)
+✅ Lightbox para ver imágenes de posts en pantalla completa
+✅ Paginación en página de inicio (canciones, películas, series, álbumes, playlists)
+✅ Paginación en páginas de películas y series
+✅ Selector de elementos por página (12, 18, 24, 36, 48)
+✅ Favoritos del foro guardados en biblioteca持久化
+✅ Sección "Hilos guardados" en la biblioteca
+✅ Fotos de perfil de usuario para posts del foro
+
+🎯 MEJORAS VISUALES:
+• Reproductor fullscreen con gradiente de fondo
+• Controles grandes y fáciles de usar en móvil
+• Animaciones suaves al expandir/colapsar
+• Volumen con popup flotante en móvil
+
+🎯 PRÓXIMAMENTE:
+• ecualizador visual
+• Modo oscuro/claro
+• Notificaciones push
+• Modo offline`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80'],
+    comments: [],
+  },
+  {
+    id: '1',
     title: '📢 Actualización v2.1 - Foro mejorado y subida de imágenes',
     body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.0:
 
