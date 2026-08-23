@@ -153,6 +153,7 @@ export default function ForumThreadPage() {
   const [reportReason, setReportReason] = useState('');
   const [reportDetails, setReportDetails] = useState('');
   const [copied, setCopied] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   const post = posts.find((p) => p.id === id);
 
@@ -308,7 +309,14 @@ export default function ForumThreadPage() {
             {currentPost.images && currentPost.images.length > 0 && (
               <div className="mt-4 flex gap-3 overflow-x-auto no-scrollbar">
                 {currentPost.images.map((img, i) => (
-                  <img key={i} src={img} alt="" className="h-48 rounded-2xl object-cover" loading="lazy" />
+                  <img
+                    key={i}
+                    src={img}
+                    alt=""
+                    className="h-48 cursor-pointer rounded-2xl object-cover transition hover:opacity-80 hover:ring-2 hover:ring-fuchsia-400/50"
+                    loading="lazy"
+                    onClick={() => setFullscreenImage(img)}
+                  />
                 ))}
               </div>
             )}
@@ -537,6 +545,26 @@ export default function ForumThreadPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button
+            onClick={() => setFullscreenImage(null)}
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={fullscreenImage}
+            alt=""
+            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

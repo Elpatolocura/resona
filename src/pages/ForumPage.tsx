@@ -152,6 +152,7 @@ export default function ForumPage() {
   const [showReportModal, setShowReportModal] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [reportDetails, setReportDetails] = useState('');
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filtered = activeCategory === 'all' ? posts : posts.filter((p) => p.category === activeCategory);
@@ -421,7 +422,14 @@ export default function ForumPage() {
                     {post.images && post.images.length > 0 && (
                       <div className="sm:hidden mt-2 flex gap-2 overflow-x-auto no-scrollbar">
                         {post.images.slice(0, 3).map((img, i) => (
-                          <img key={i} src={img} alt="" className="h-20 w-20 rounded-lg object-cover" loading="lazy" />
+                          <img
+                            key={i}
+                            src={img}
+                            alt=""
+                            className="h-20 w-20 cursor-pointer rounded-lg object-cover transition hover:opacity-80 hover:ring-2 hover:ring-fuchsia-400/50"
+                            loading="lazy"
+                            onClick={() => setFullscreenImage(img)}
+                          />
                         ))}
                         {post.images.length > 3 && (
                           <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-xs font-bold text-muted">
@@ -794,6 +802,26 @@ export default function ForumPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button
+            onClick={() => setFullscreenImage(null)}
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={fullscreenImage}
+            alt=""
+            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
