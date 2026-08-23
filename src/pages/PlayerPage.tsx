@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Film, Heart, Music2, Pause, Play, SkipBack, SkipForward, Tv, Disc3, Clock, User, Share2, Flag, X, Check } from 'lucide-react';
+import { ArrowLeft, Film, Heart, Music2, Pause, Play, SkipBack, SkipForward, Tv, Disc3, Clock, User, Share2, Flag, X, Check, MoreVertical } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { useLibraryStore } from '../store/libraryStore';
 import { useMediaStore } from '../store/mediaStore';
@@ -51,6 +51,7 @@ export default function PlayerPage() {
   const [reportReason, setReportReason] = useState('');
   const [reportDetails, setReportDetails] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
 
   const currentTrack = currentMedia?.kind === 'music' ? currentMedia.track : null;
 
@@ -195,14 +196,23 @@ export default function PlayerPage() {
             </button>
             <div className="text-white/60"><VolumeControl /></div>
           </div>
-          <div className="flex items-center justify-center gap-3 pt-2">
+          <div className="relative flex items-center justify-center gap-3 pt-2">
             <button onClick={shareTrack} className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/20 hover:text-white">
               {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Share2 className="h-3.5 w-3.5" />}
               {copied ? 'Copiado' : 'Compartir'}
             </button>
-            <button onClick={() => setShowReportModal(true)} className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/20 hover:text-white">
-              <Flag className="h-3.5 w-3.5" /> Denunciar
-            </button>
+            <div className="relative">
+              <button onClick={() => setShowOptions(!showOptions)} className="inline-flex items-center justify-center rounded-full bg-white/10 p-1.5 text-white/60 transition hover:bg-white/20 hover:text-white">
+                <MoreVertical className="h-4 w-4" />
+              </button>
+              {showOptions && (
+                <div className="absolute bottom-full right-0 z-50 mb-2 min-w-40 origin-bottom animate-fade-in rounded-xl border border-white/20 bg-surface-2 p-1 shadow-2xl shadow-black/60">
+                  <button onClick={() => { setShowReportModal(true); setShowOptions(false); }} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-text transition hover:bg-surface-3">
+                    <Flag className="h-3.5 w-3.5" /> Denunciar
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
