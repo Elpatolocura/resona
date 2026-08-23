@@ -305,67 +305,78 @@ export default function ForumPage() {
       <div className="space-y-3">
         {filtered.map((post) => {
           const expanded = expandedPost === post.id;
+          const textPreview = post.body.length > 150 ? post.body.slice(0, 150) + '...' : post.body;
+          const hasMedia = (post.images && post.images.length > 0) || post.video;
+          const hasLinks = post.links && post.links.length > 0;
+          const commentCount = post.comments.length;
+          const replyCount = post.comments.reduce((acc, c) => acc + (c.replies?.length ?? 0), 0);
+          const totalComments = commentCount + replyCount;
+
           return (
             <div
               key={post.id}
-              className="rounded-2xl border border-line bg-surface/70 transition-all hover:border-fuchsia-400/20 hover:bg-surface/90"
+              className="rounded-2xl border border-line bg-surface/70 transition-all hover:border-fuchsia-400/20 hover:bg-surface/90 hover:shadow-lg hover:shadow-black/20"
             >
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/20 text-sm font-bold text-fuchsia-300">
-                    {post.author === 'Admin' ? <Shield className="h-5 w-5" /> : post.author.charAt(0).toUpperCase()}
-                  </div>
+              <div className="p-4 sm:p-5">
+                <div className="flex gap-4">
+                  {post.images && post.images.length > 0 && (
+                    <div className="hidden sm:block shrink-0">
+                      <img
+                        src={post.images[0]}
+                        alt=""
+                        className="h-24 w-24 rounded-xl object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold', catColor(post.category))}>
+                      <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold', catColor(post.category))}>
                         {catIcon(post.category)} {CATEGORIES.find((c) => c.id === post.category)?.label}
                       </span>
                       {post.author === 'Admin' && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-500/20 px-2 py-0.5 text-[10px] font-bold text-fuchsia-300">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-fuchsia-500/20 px-2.5 py-0.5 text-[10px] font-bold text-fuchsia-300">
                           <Shield className="h-2.5 w-2.5" /> Admin
                         </span>
                       )}
-                      <span className="text-xs text-faint">{post.date}</span>
+                      <span className="text-[11px] text-faint">{post.date}</span>
                     </div>
+
                     <h3
                       onClick={() => navigate(`/forum/${post.id}`)}
-                      className="mt-1 text-sm font-bold text-text leading-snug cursor-pointer transition hover:text-fuchsia-300"
+                      className="mt-2 text-base font-bold text-text leading-snug cursor-pointer transition hover:text-fuchsia-300"
                     >
                       {post.title}
                     </h3>
-                    <p className="mt-1 text-xs text-muted leading-relaxed whitespace-pre-line">{renderText(post.body)}</p>
+
+                    <p className="mt-1.5 text-xs text-muted leading-relaxed whitespace-pre-line">{renderText(textPreview)}</p>
 
                     {post.images && post.images.length > 0 && (
-                      <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
-                        {post.images.map((img, i) => (
-                          <img key={i} src={img} alt="" className="h-32 rounded-xl object-cover" loading="lazy" />
+                      <div className="sm:hidden mt-2 flex gap-2 overflow-x-auto no-scrollbar">
+                        {post.images.slice(0, 3).map((img, i) => (
+                          <img key={i} src={img} alt="" className="h-20 w-20 rounded-lg object-cover" loading="lazy" />
                         ))}
+                        {post.images.length > 3 && (
+                          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-xs font-bold text-muted">
+                            +{post.images.length - 3}
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {post.video && (
-                      <div className="mt-3 aspect-video overflow-hidden rounded-xl">
-                        <iframe
-                          src={post.video}
-                          className="h-full w-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
+                      <div className="mt-2 flex items-center gap-1.5 text-[11px] text-faint">
+                        <Video className="h-3 w-3 text-red-400" /> Video incluido
                       </div>
                     )}
 
-                    {post.links && post.links.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {post.links.map((link, i) => (
-                          <a
-                            key={i}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface/80 px-3 py-1.5 text-[11px] font-medium text-muted transition hover:border-fuchsia-400/40 hover:text-fuchsia-300"
-                          >
-                            <ExternalLink className="h-3 w-3" /> {link.label}
-                          </a>
+                    {hasLinks && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {post.links!.slice(0, 3).map((link, i) => (
+                          <span key={i} className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-2 py-0.5 text-[10px] text-muted">
+                            <ExternalLink className="h-2.5 w-2.5" /> {link.label}
+                          </span>
                         ))}
                       </div>
                     )}
@@ -386,9 +397,21 @@ export default function ForumPage() {
                         className="inline-flex items-center gap-1.5 text-xs font-medium text-faint transition-colors hover:text-fuchsia-300"
                       >
                         <MessageSquare className="h-3.5 w-3.5" />
-                        {post.comments.length} {post.comments.length === 1 ? 'comentario' : 'comentarios'}
+                        {totalComments} {totalComments === 1 ? 'comentario' : 'comentarios'}
                       </button>
+                      {hasMedia && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-faint">
+                          <ImageIcon className="h-3 w-3" /> Multimedia
+                        </span>
+                      )}
                     </div>
+                  </div>
+
+                  <div className="hidden sm:flex shrink-0 flex-col items-center gap-1 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/15 text-sm font-black text-fuchsia-300">
+                      {post.likes}
+                    </div>
+                    <span className="text-[9px] font-semibold uppercase text-faint">likes</span>
                   </div>
                 </div>
               </div>
