@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Settings, User, Music2, Film, Tv, Bell, Moon, Sun, Volume2, Globe, Save, Trash2, LogOut } from 'lucide-react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { Settings, User, Music2, Film, Tv, Bell, Moon, Sun, Volume2, Globe, Save, Trash2 } from 'lucide-react';
 import { cn } from '../utils/format';
 import { toast } from '../store/toastStore';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -24,63 +24,152 @@ const SECTIONS: SettingsSection[] = [
   { id: 'storage', label: 'Almacenamiento', icon: Trash2 },
 ];
 
+interface PlayerSettings {
+  autoPlay: boolean;
+  autoMix: boolean;
+  audioQuality: string;
+  defaultVolume: number;
+}
+
+interface NotificationSettings {
+  newSongs: boolean;
+  movieUpdates: boolean;
+  forumActivity: boolean;
+}
+
+interface AppearanceSettings {
+  animations: boolean;
+  compact: boolean;
+}
+
+const DEFAULT_PLAYER: PlayerSettings = { autoPlay: true, autoMix: false, audioQuality: 'auto', defaultVolume: 80 };
+const DEFAULT_NOTIFICATIONS: NotificationSettings = { newSongs: true, movieUpdates: true, forumActivity: false };
+const DEFAULT_APPEARANCE: AppearanceSettings = { animations: true, compact: false };
+
+function loadJSON<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function shallowEqual(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
+  const keysA = Object.keys(a);
+  if (keysA.length !== Object.keys(b).length) return false;
+  return keysA.every((k) => a[k] === b[k]);
+}
+
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('profile');
   const [showClearData, setShowClearData] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
-  const { content, setContent } = useContent();
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const { theme, setTheme, persistTheme } = useTheme();
+  const { language, setLanguage, persistLanguage } = useLanguage();
+  const { content, setContent, persistContent } = useContent();
   const { user, isAuthenticated } = useAuthStore();
   const t = useT();
-  
-  const [playerSettings, setPlayerSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('resona_player');
-      return saved ? JSON.parse(saved) : { autoPlay: true, autoMix: false, audioQuality: 'auto', defaultVolume: 80 };
-    } catch {
-      return { autoPlay: true, autoMix: false, audioQuality: 'auto', defaultVolume: 80 };
+
+  const savedThemeRef = useRef(theme);
+  const savedLanguageRef = useRef(language);
+  const savedContentRef = useRef(content);
+
+  const [playerSettings, setPlayerSettings] = useState<PlayerSettings>(() => loadJSON('resona_player', DEFAULT_PLAYER));
+  const savedPlayerRef = useRef<PlayerSettings>(playerSettings);
+
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => loadJSON('resona_notifications', DEFAULT_NOTIFICATIONS));
+  const savedNotificationsRef = useRef<NotificationSettings>(notificationSettings);
+
+  const [appearanceSettings, setAppearanceSettings] = useState<AppearanceSettings>(() => loadJSON('resona_appearance', DEFAULT_APPEARANCE));
+  const savedAppearanceRef = useRef<AppearanceSettings>(appearanceSettings);
+
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileEmail, setProfileEmail] = useState(user?.email || '');
+  const savedProfileRef = useRef({ name: user?.name || '', email: user?.email || '' });
+
+  const markDirty = useCallback(() => setHasChanges(true), []);
+
+  useEffect(() => {
+    if (activeSection === 'profile') {
+      const dirty = profileName !== savedProfileRef.current.name || profileEmail !== savedProfileRef.current.email;
+      setHasChanges(dirty);
     }
-  });
+  }, [activeSection, profileName, profileEmail]);
 
-  const [notificationSettings, setNotificationSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('resona_notifications');
-      return saved ? JSON.parse(saved) : { newSongs: true, movieUpdates: true, forumActivity: false };
-    } catch {
-      return { newSongs: true, movieUpdates: true, forumActivity: false };
+  useEffect(() => {
+    if (activeSection === 'player') {
+      setHasChanges(!shallowEqual(playerSettings as unknown as Record<string, unknown>, savedPlayerRef.current as unknown as Record<string, unknown>));
     }
-  });
+  }, [activeSection, playerSettings]);
 
-  const [appearanceSettings, setAppearanceSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('resona_appearance');
-      return saved ? JSON.parse(saved) : { animations: true, compact: false };
-    } catch {
-      return { animations: true, compact: false };
+  useEffect(() => {
+    if (activeSection === 'notifications') {
+      setHasChanges(!shallowEqual(notificationSettings as unknown as Record<string, unknown>, savedNotificationsRef.current as unknown as Record<string, unknown>));
     }
-  });
+  }, [activeSection, notificationSettings]);
 
-  const updatePlayerSettings = (key: string, value: boolean | string | number) => {
-    const newSettings = { ...playerSettings, [key]: value };
-    setPlayerSettings(newSettings);
-    localStorage.setItem('resona_player', JSON.stringify(newSettings));
-    toast('Configuración guardada', 'success');
-  };
+  useEffect(() => {
+    if (activeSection === 'appearance') {
+      setHasChanges(!shallowEqual(appearanceSettings as unknown as Record<string, unknown>, savedAppearanceRef.current as unknown as Record<string, unknown>));
+    }
+  }, [activeSection, appearanceSettings]);
 
-  const updateNotificationSettings = (key: string, value: boolean) => {
-    const newSettings = { ...notificationSettings, [key]: value };
-    setNotificationSettings(newSettings);
-    localStorage.setItem('resona_notifications', JSON.stringify(newSettings));
-    toast('Configuración guardada', 'success');
-  };
+  useEffect(() => {
+    if (activeSection === 'content') {
+      setHasChanges(!shallowEqual(content as unknown as Record<string, unknown>, savedContentRef.current as unknown as Record<string, unknown>));
+    }
+  }, [activeSection, content]);
 
-  const updateAppearanceSettings = (key: string, value: boolean) => {
-    const newSettings = { ...appearanceSettings, [key]: value };
-    setAppearanceSettings(newSettings);
-    localStorage.setItem('resona_appearance', JSON.stringify(newSettings));
-    toast('Configuración guardada', 'success');
-  };
+  useEffect(() => {
+    if (activeSection === 'appearance') {
+      setHasChanges(theme !== savedThemeRef.current);
+    }
+  }, [activeSection, theme]);
+
+  useEffect(() => {
+    if (activeSection === 'language') {
+      setHasChanges(language !== savedLanguageRef.current);
+    }
+  }, [activeSection, language]);
+
+  useEffect(() => {
+    if (activeSection === 'player') {
+      setHasChanges(!shallowEqual(playerSettings as unknown as Record<string, unknown>, savedPlayerRef.current as unknown as Record<string, unknown>));
+    }
+  }, [activeSection, playerSettings]);
+
+  const handleSave = useCallback(() => {
+    if (activeSection === 'profile') {
+      savedProfileRef.current = { name: profileName, email: profileEmail };
+      toast('Perfil actualizado', 'success');
+    } else if (activeSection === 'player') {
+      localStorage.setItem('resona_player', JSON.stringify(playerSettings));
+      savedPlayerRef.current = { ...playerSettings };
+      toast('Configuración del reproductor guardada', 'success');
+    } else if (activeSection === 'content') {
+      persistContent();
+      savedContentRef.current = { ...content };
+      toast('Configuración de contenido guardada', 'success');
+    } else if (activeSection === 'notifications') {
+      localStorage.setItem('resona_notifications', JSON.stringify(notificationSettings));
+      savedNotificationsRef.current = { ...notificationSettings };
+      toast('Configuración de notificaciones guardada', 'success');
+    } else if (activeSection === 'appearance') {
+      persistTheme();
+      localStorage.setItem('resona_appearance', JSON.stringify(appearanceSettings));
+      savedAppearanceRef.current = { ...appearanceSettings };
+      savedThemeRef.current = theme;
+      toast('Apariencia guardada', 'success');
+    } else if (activeSection === 'language') {
+      persistLanguage();
+      savedLanguageRef.current = language;
+      toast('Idioma guardado', 'success');
+    }
+    setHasChanges(false);
+  }, [activeSection, profileName, profileEmail, playerSettings, content, notificationSettings, appearanceSettings, theme, language, persistContent, persistTheme, persistLanguage]);
 
   const handleClearData = () => {
     localStorage.clear();
@@ -92,6 +181,24 @@ export default function SettingsPage() {
     toast('Función no disponible aún', 'info');
     setShowDeleteAccount(false);
   };
+
+  const SaveButton = () => (
+    <div className="mt-6 flex justify-end border-t border-line pt-4">
+      <button
+        onClick={handleSave}
+        disabled={!hasChanges}
+        className={cn(
+          'inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold shadow-lg transition',
+          hasChanges
+            ? 'bg-brand text-white shadow-fuchsia-500/30 hover:scale-[1.02] active:scale-95'
+            : 'cursor-not-allowed bg-surface-3 text-faint',
+        )}
+      >
+        <Save className="h-4 w-4" />
+        {t('save')}
+      </button>
+    </div>
+  );
 
   return (
     <div className="animate-fade-in">
@@ -132,11 +239,11 @@ export default function SettingsPage() {
               <div className="flex items-center gap-4">
                 <div className="h-20 w-20 rounded-full bg-gradient-to-br from-violet-600/40 to-fuchsia-600/40 flex items-center justify-center">
                   <span className="text-2xl font-bold text-white/80">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    {profileName?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div>
-                  <p className="font-semibold text-text">{user?.name || 'Usuario'}</p>
+                  <p className="font-semibold text-text">{profileName || 'Usuario'}</p>
                   <p className="text-sm text-muted">{isAuthenticated ? 'Sesión activa' : 'No has iniciado sesión'}</p>
                 </div>
               </div>
@@ -144,13 +251,25 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-text">Nombre de usuario</label>
-                  <input type="text" defaultValue={user?.name || ''} className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40" />
+                  <input
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => { setProfileName(e.target.value); markDirty(); }}
+                    className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40"
+                  />
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-text">Correo electrónico</label>
-                  <input type="email" defaultValue={user?.email || ''} className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40" />
+                  <input
+                    type="email"
+                    value={profileEmail}
+                    onChange={(e) => { setProfileEmail(e.target.value); markDirty(); }}
+                    className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none transition focus:border-fuchsia-400/40"
+                  />
                 </div>
               </div>
+
+              <SaveButton />
             </div>
           )}
 
@@ -166,7 +285,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Siguiente canción al finalizar</p>
                   </div>
                   <button
-                    onClick={() => updatePlayerSettings('autoPlay', !playerSettings.autoPlay)}
+                    onClick={() => setPlayerSettings((s) => ({ ...s, autoPlay: !s.autoPlay }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
                       playerSettings.autoPlay ? 'bg-brand' : 'bg-surface-3',
@@ -185,7 +304,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Transiciones suaves entre canciones</p>
                   </div>
                   <button
-                    onClick={() => updatePlayerSettings('autoMix', !playerSettings.autoMix)}
+                    onClick={() => setPlayerSettings((s) => ({ ...s, autoMix: !s.autoMix }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
                       playerSettings.autoMix ? 'bg-brand' : 'bg-surface-3',
@@ -205,7 +324,7 @@ export default function SettingsPage() {
                   </div>
                   <select
                     value={playerSettings.audioQuality}
-                    onChange={(e) => updatePlayerSettings('audioQuality', e.target.value)}
+                    onChange={(e) => setPlayerSettings((s) => ({ ...s, audioQuality: e.target.value }))}
                     className="rounded-xl border border-line bg-surface-2 px-3 py-1.5 text-sm text-text outline-none"
                   >
                     <option value="auto">Automática</option>
@@ -229,13 +348,15 @@ export default function SettingsPage() {
                       min="0"
                       max="100"
                       value={playerSettings.defaultVolume}
-                      onChange={(e) => updatePlayerSettings('defaultVolume', parseInt(e.target.value))}
+                      onChange={(e) => setPlayerSettings((s) => ({ ...s, defaultVolume: parseInt(e.target.value) }))}
                       className="w-24 accent-fuchsia-500"
                     />
                     <span className="w-8 text-right text-sm text-muted">{playerSettings.defaultVolume}%</span>
                   </div>
                 </div>
               </div>
+
+              <SaveButton />
             </div>
           )}
 
@@ -340,6 +461,8 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+
+              <SaveButton />
             </div>
           )}
 
@@ -355,7 +478,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Cuando tus artistas favoritos publiquen</p>
                   </div>
                   <button
-                    onClick={() => updateNotificationSettings('newSongs', !notificationSettings.newSongs)}
+                    onClick={() => setNotificationSettings((s) => ({ ...s, newSongs: !s.newSongs }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
                       notificationSettings.newSongs ? 'bg-brand' : 'bg-surface-3',
@@ -374,7 +497,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Nuevas películas disponibles</p>
                   </div>
                   <button
-                    onClick={() => updateNotificationSettings('movieUpdates', !notificationSettings.movieUpdates)}
+                    onClick={() => setNotificationSettings((s) => ({ ...s, movieUpdates: !s.movieUpdates }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
                       notificationSettings.movieUpdates ? 'bg-brand' : 'bg-surface-3',
@@ -393,7 +516,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Respuestas a tus publicaciones</p>
                   </div>
                   <button
-                    onClick={() => updateNotificationSettings('forumActivity', !notificationSettings.forumActivity)}
+                    onClick={() => setNotificationSettings((s) => ({ ...s, forumActivity: !s.forumActivity }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
                       notificationSettings.forumActivity ? 'bg-brand' : 'bg-surface-3',
@@ -406,6 +529,8 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
+
+              <SaveButton />
             </div>
           )}
 
@@ -458,7 +583,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Efectos visuales y transiciones</p>
                   </div>
                   <button
-                    onClick={() => updateAppearanceSettings('animations', !appearanceSettings.animations)}
+                    onClick={() => setAppearanceSettings((s) => ({ ...s, animations: !s.animations }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
                       appearanceSettings.animations ? 'bg-brand' : 'bg-surface-3',
@@ -477,7 +602,7 @@ export default function SettingsPage() {
                     <p className="text-sm text-muted">Mostrar más contenido en pantalla</p>
                   </div>
                   <button
-                    onClick={() => updateAppearanceSettings('compact', !appearanceSettings.compact)}
+                    onClick={() => setAppearanceSettings((s) => ({ ...s, compact: !s.compact }))}
                     className={cn(
                       'relative h-6 w-11 rounded-full transition',
                       appearanceSettings.compact ? 'bg-brand' : 'bg-surface-3',
@@ -490,6 +615,8 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
+
+              <SaveButton />
             </div>
           )}
 
@@ -534,6 +661,8 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+
+              <SaveButton />
             </div>
           )}
 
@@ -572,19 +701,6 @@ export default function SettingsPage() {
                   Borrar todos los datos locales
                 </button>
               </div>
-            </div>
-          )}
-
-          {/* Save button (only for profile) */}
-          {activeSection === 'profile' && (
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => toast('Cambios guardados', 'success')}
-                className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-fuchsia-500/30 transition hover:scale-[1.02] active:scale-95"
-              >
-                <Save className="h-4 w-4" />
-                Guardar cambios
-              </button>
             </div>
           )}
         </div>

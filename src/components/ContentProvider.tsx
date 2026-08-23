@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 
 interface ContentSettings {
   showMusic: boolean;
@@ -10,6 +10,7 @@ interface ContentSettings {
 interface ContentContextType {
   content: ContentSettings;
   setContent: (content: ContentSettings) => void;
+  persistContent: () => void;
 }
 
 const DEFAULT_CONTENT: ContentSettings = {
@@ -22,6 +23,7 @@ const DEFAULT_CONTENT: ContentSettings = {
 const ContentContext = createContext<ContentContextType>({
   content: DEFAULT_CONTENT,
   setContent: () => {},
+  persistContent: () => {},
 });
 
 export const useContent = () => useContext(ContentContext);
@@ -40,8 +42,11 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
 
   const setContent = (newContent: ContentSettings) => {
     setContentState(newContent);
-    localStorage.setItem('resona_content', JSON.stringify(newContent));
   };
+
+  const persistContent = useCallback(() => {
+    localStorage.setItem('resona_content', JSON.stringify(content));
+  }, [content]);
 
   useEffect(() => {
     const handler = () => {
@@ -53,7 +58,7 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ContentContext.Provider value={{ content, setContent }}>
+    <ContentContext.Provider value={{ content, setContent, persistContent }}>
       {children}
     </ContentContext.Provider>
   );

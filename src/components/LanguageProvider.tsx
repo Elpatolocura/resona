@@ -1,4 +1,4 @@
-import { useEffect, useState, createContext, useContext } from 'react';
+import { useEffect, useState, createContext, useContext, useCallback } from 'react';
 
 type Language = 'system' | 'es' | 'en' | 'pt' | 'fr';
 
@@ -6,12 +6,14 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   resolvedLanguage: 'es' | 'en' | 'pt' | 'fr';
+  persistLanguage: () => void;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
   language: 'system',
   setLanguage: () => {},
   resolvedLanguage: 'es',
+  persistLanguage: () => {},
 });
 
 const LANG_MAP: Record<string, 'es' | 'en' | 'pt' | 'fr'> = {
@@ -210,11 +212,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     };
 
     resolveLanguage();
+  }, [language]);
+
+  const persistLanguage = useCallback(() => {
     localStorage.setItem('resona_language', language);
   }, [language]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, resolvedLanguage }}>
+    <LanguageContext.Provider value={{ language, setLanguage, resolvedLanguage, persistLanguage }}>
       {children}
     </LanguageContext.Provider>
   );

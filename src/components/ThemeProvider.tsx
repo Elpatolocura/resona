@@ -1,4 +1,4 @@
-import { useEffect, useState, createContext, useContext } from 'react';
+import { useEffect, useState, createContext, useContext, useCallback } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -6,12 +6,14 @@ interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   resolvedTheme: 'dark' | 'light';
+  persistTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
   setTheme: () => {},
   resolvedTheme: 'dark',
+  persistTheme: () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -46,11 +48,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
     root.classList.remove('dark', 'light');
     root.classList.add(resolvedTheme);
+  }, [resolvedTheme]);
+
+  const persistTheme = useCallback(() => {
     localStorage.setItem('resona_theme', theme);
-  }, [theme, resolvedTheme]);
+  }, [theme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme, persistTheme }}>
       {children}
     </ThemeContext.Provider>
   );
