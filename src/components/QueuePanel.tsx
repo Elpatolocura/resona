@@ -5,7 +5,10 @@ import { imageUrl, cn, formatTime } from '../utils/format';
 import { mediaSubtitle } from '../utils/media';
 import type { Media } from '../types';
 import ConfirmDialog from './ConfirmDialog';
+import Pagination from './Pagination';
 import { useState } from 'react';
+
+const QUEUE_PER_PAGE = 8;
 
 interface QueuePanelProps {
   className?: string;
@@ -19,6 +22,7 @@ export default function QueuePanel({ className, onClose }: QueuePanelProps) {
   const playMediaList = usePlayerStore((s) => s.playMediaList);
   const removeFromQueue = usePlayerStore((s) => s.removeFromQueue);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [queuePage, setQueuePage] = useState(1);
 
   const subtitle = (media: Media) =>
     media.kind === 'music' ? media.subtitle : mediaSubtitle(media);
@@ -35,6 +39,9 @@ export default function QueuePanel({ className, onClose }: QueuePanelProps) {
     }
     setConfirmClear(false);
   };
+
+  const totalQueuePages = Math.ceil(queue.length / QUEUE_PER_PAGE);
+  const paginatedQueue = queue.slice((queuePage - 1) * QUEUE_PER_PAGE, queuePage * QUEUE_PER_PAGE);
 
   return (
     <div className={cn('flex h-full flex-col bg-surface/95 backdrop-blur-xl', className)}>
@@ -112,11 +119,12 @@ export default function QueuePanel({ className, onClose }: QueuePanelProps) {
           <>
             <div className="px-4 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">
-                Siguiente ({Math.max(0, queue.length - queueIndex - 1)} canciones)
+                Cola ({queue.length} canciones)
               </p>
             </div>
             <div className="space-y-0.5 px-2">
-              {queue.map((media, index) => {
+              {paginatedQueue.map((media, i) => {
+                const index = (queuePage - 1) * QUEUE_PER_PAGE + i;
                 const isCurrent = index === queueIndex;
                 const isPast = index < queueIndex;
 
@@ -177,6 +185,7 @@ export default function QueuePanel({ className, onClose }: QueuePanelProps) {
                 );
               })}
             </div>
+            {totalQueuePages > 1 && <div className="px-3 py-2"><Pagination currentPage={queuePage} totalPages={totalQueuePages} onPageChange={setQueuePage} /></div>}
           </>
         )}
       </div>
