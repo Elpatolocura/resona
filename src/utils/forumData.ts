@@ -34,6 +34,38 @@ export const FORUM_CATEGORIES = [
 
 export const INITIAL_POSTS: ForumPost[] = [
   {
+    id: '101',
+    title: '📢 Actualización v2.4 - Tema claro y más',
+    body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.3:
+
+📌 ANTES (v2.3):
+• Solo existía tema oscuro
+• No se podía cambiar la apariencia
+• No había página de configuración
+
+📌 AHORA (v2.4):
+✅ Tema claro disponible (Configuración > Apariencia)
+✅ Opción Sistema para seguir preferencia del SO
+✅ Página de configuración completa
+✅ Imágenes de fallback cuando falla la carga
+✅ Paginación en canciones similares (10 por página)
+✅ Paginación en cola de reproducción (8 por página)
+✅ Menú de opciones (tres puntos) en canciones
+✅ El reproductor no invade el sidebar en desktop
+
+🎯 PRÓXIMAMENTE:
+• ecualizador visual
+• Notificaciones push
+• Modo offline`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=800&q=80'],
+    comments: [],
+  },
+  {
     id: '100',
     title: '📢 Actualización v2.3 - Cola de reproducción',
     body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.2:

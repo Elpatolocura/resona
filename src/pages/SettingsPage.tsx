@@ -3,6 +3,7 @@ import { Settings, User, Music2, Film, Tv, Bell, Moon, Sun, Volume2, Globe, Save
 import { cn } from '../utils/format';
 import { toast } from '../store/toastStore';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useTheme } from '../components/ThemeProvider';
 
 interface SettingsSection {
   id: string;
@@ -24,6 +25,7 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState('profile');
   const [showClearData, setShowClearData] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const handleClearData = () => {
     localStorage.clear();
@@ -258,12 +260,38 @@ export default function SettingsPage() {
               
               <div className="space-y-4">
                 <div className="rounded-xl border border-line p-4">
-                  <p className="mb-3 font-medium text-text">Tema actual</p>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 rounded-xl border border-fuchsia-400/50 bg-brand/15 px-4 py-3">
-                      <Moon className="h-4 w-4 text-fuchsia-300" />
-                      <span className="text-sm font-medium text-fuchsia-300">Oscuro (Sistema)</span>
-                    </div>
+                  <p className="mb-3 font-medium text-text">Tema</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setTheme('dark')}
+                      className={cn(
+                        'flex items-center gap-2 rounded-xl border px-4 py-3 transition',
+                        theme === 'dark' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
+                      )}
+                    >
+                      <Moon className="h-4 w-4" />
+                      <span className="text-sm font-medium">Oscuro</span>
+                    </button>
+                    <button
+                      onClick={() => setTheme('light')}
+                      className={cn(
+                        'flex items-center gap-2 rounded-xl border px-4 py-3 transition',
+                        theme === 'light' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
+                      )}
+                    >
+                      <Sun className="h-4 w-4" />
+                      <span className="text-sm font-medium">Claro</span>
+                    </button>
+                    <button
+                      onClick={() => setTheme('system')}
+                      className={cn(
+                        'flex items-center gap-2 rounded-xl border px-4 py-3 transition',
+                        theme === 'system' ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300' : 'border-line text-muted hover:text-text',
+                      )}
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span className="text-sm font-medium">Sistema</span>
+                    </button>
                   </div>
                   <p className="mt-3 text-sm text-muted">El tema oscuro es el color oficial de la plataforma Resona.</p>
                 </div>
