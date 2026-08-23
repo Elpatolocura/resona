@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { HashRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { ThemeProvider } from './components/ThemeProvider';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -29,29 +30,31 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    <HashRouter>
-      <ScrollToTop />
-      <Routes>
-        <Route path="/player" element={<PlayerPage />} />
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/library" element={<LibraryPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          <Route path="/playlists" element={<PlaylistsPage />} />
-          <Route path="/playlist/:id" element={<PlaylistDetailPage />} />
-          <Route path="/album/:id" element={<AlbumPage />} />
-          <Route path="/artist/:id" element={<ArtistPage />} />
-          <Route path="/movies" element={<MoviesPage />} />
-          <Route path="/tv" element={<TvShowsPage />} />
-          <Route path="/media/:kind/:id" element={<MediaDetailPage />} />
-          <Route path="/watch/:kind/:id" element={<WatchPage />} />
-          <Route path="/forum" element={<ForumPage />} />
-          <Route path="/forum/:id" element={<ForumThreadPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="*" element={<HomePage />} />
-        </Route>
-      </Routes>
-    </HashRouter>
+    <ThemeProvider>
+      <HashRouter>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/player" element={<PlayerPage />} />
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/playlists" element={<PlaylistsPage />} />
+            <Route path="/playlist/:id" element={<PlaylistDetailPage />} />
+            <Route path="/album/:id" element={<AlbumPage />} />
+            <Route path="/artist/:id" element={<ArtistPage />} />
+            <Route path="/movies" element={<MoviesPage />} />
+            <Route path="/tv" element={<TvShowsPage />} />
+            <Route path="/media/:kind/:id" element={<MediaDetailPage />} />
+            <Route path="/watch/:kind/:id" element={<WatchPage />} />
+            <Route path="/forum" element={<ForumPage />} />
+            <Route path="/forum/:id" element={<ForumThreadPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<HomePage />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </ThemeProvider>
   );
 }
