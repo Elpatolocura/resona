@@ -65,7 +65,7 @@ export default function PlayerPage() {
     <div className="flex h-full animate-fade-in">
       {/* Left side - Player */}
       <div
-        className="flex h-full flex-1 flex-col items-center justify-between p-6"
+        className="flex h-full w-1/2 flex-col items-center justify-between p-6"
         style={{
           background: art && !isVideo
             ? `linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(30,10,40,0.9) 40%, rgba(15,5,20,1) 100%)`
@@ -199,7 +199,7 @@ export default function PlayerPage() {
       </div>
 
       {/* Right side - Coming soon */}
-      <div className="hidden w-[420px] shrink-0 flex-col items-center justify-center border-l border-line bg-surface/30 p-8 xl:flex">
+      <div className="hidden w-1/2 flex-col items-center justify-center border-l border-line bg-surface/30 p-8 xl:flex">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-fuchsia-500/10">
             <Sparkles className="h-10 w-10 text-fuchsia-300/50" />
