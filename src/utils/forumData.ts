@@ -34,6 +34,36 @@ export const FORUM_CATEGORIES = [
 
 export const INITIAL_POSTS: ForumPost[] = [
   {
+    id: '102',
+    title: '📢 Actualización v2.5 - Multiidioma',
+    body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.4:
+
+📌 ANTES (v2.4):
+• La interfaz estaba solo en español
+• No se podía cambiar el idioma
+• El idioma del sistema no se detectaba
+
+📌 AHORA (v2.5):
+✅ Detección automática del idioma del sistema
+✅ Opciones de idioma: Español, English, Português, Français
+✅ La opción "Sistema" detecta el idioma del SO del usuario
+✅ Cambio de idioma en Configuración > Idioma
+✅ El contenido (películas/series) se filtra por español por defecto
+✅ Changelog v2.4 integrado
+
+🎯 PRÓXIMAMENTE:
+• ecualizador visual
+• Notificaciones push
+• Modo offline`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80'],
+    comments: [],
+  },
+  {
     id: '101',
     title: '📢 Actualización v2.4 - Tema claro y más',
     body: `🚀 ¡Nueva actualización disponible! Estos son los cambios desde la v2.3:

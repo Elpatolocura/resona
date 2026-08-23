@@ -4,6 +4,7 @@ import { cn } from '../utils/format';
 import { toast } from '../store/toastStore';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useTheme } from '../components/ThemeProvider';
+import { useLanguage, LANGUAGES, useT } from '../components/LanguageProvider';
 
 interface SettingsSection {
   id: string;
@@ -26,6 +27,8 @@ export default function SettingsPage() {
   const [showClearData, setShowClearData] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage } = useLanguage();
+  const t = useT();
 
   const handleClearData = () => {
     localStorage.clear();
@@ -322,37 +325,42 @@ export default function SettingsPage() {
           {/* Language */}
           {activeSection === 'language' && (
             <div className="space-y-6">
-              <h2 className="text-xl font-bold text-text">Idioma y región</h2>
+              <h2 className="text-xl font-bold text-text">{t('language')}</h2>
               
               <div className="space-y-4">
                 <div className="rounded-xl border border-line p-4">
-                  <p className="mb-3 font-medium text-text">Idioma de la interfaz</p>
-                  <select className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none">
-                    <option>Español</option>
-                    <option>English</option>
-                    <option>Português</option>
-                    <option>Français</option>
-                  </select>
+                  <p className="mb-3 font-medium text-text">{t('language')} de la interfaz</p>
+                  <div className="flex flex-wrap gap-2">
+                    {LANGUAGES.map(({ id, label, flag }) => (
+                      <button
+                        key={id}
+                        onClick={() => setLanguage(id)}
+                        className={cn(
+                          'flex items-center gap-2 rounded-xl border px-4 py-2.5 transition',
+                          language === id
+                            ? 'border-fuchsia-400/50 bg-brand/15 text-fuchsia-300'
+                            : 'border-line text-muted hover:text-text',
+                        )}
+                      >
+                        <span className="text-lg">{flag}</span>
+                        <span className="text-sm font-medium">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-sm text-muted">El idioma del sistema se detecta automáticamente.</p>
                 </div>
 
                 <div className="rounded-xl border border-line p-4">
-                  <p className="mb-3 font-medium text-text">Región</p>
-                  <select className="w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-text outline-none">
-                    <option>Latinoamérica</option>
-                    <option>España</option>
-                    <option>Estados Unidos</option>
-                    <option>Otro</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between rounded-xl border border-line p-4">
-                  <div>
-                    <p className="font-medium text-text">Solo contenido en español</p>
-                    <p className="text-sm text-muted">Filtrar películas, series y música</p>
+                  <p className="mb-3 font-medium text-text">Contenido en español</p>
+                  <p className="mb-3 text-sm text-muted">Filtrar películas, series y música en español</p>
+                  <div className="flex gap-2">
+                    <button className="rounded-full border border-fuchsia-400/50 bg-brand/15 px-4 py-2 text-sm font-medium text-fuchsia-300">
+                      Solo español
+                    </button>
+                    <button className="rounded-full border border-line px-4 py-2 text-sm font-medium text-muted hover:text-text">
+                      Todos los idiomas
+                    </button>
                   </div>
-                  <button className="relative h-6 w-11 rounded-full bg-brand transition">
-                    <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" />
-                  </button>
                 </div>
               </div>
             </div>
