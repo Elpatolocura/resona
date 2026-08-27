@@ -24,17 +24,12 @@ interface NavItem {
   to: string;
   label: string;
   icon: typeof Home;
-  end?: boolean;
   requires?: 'music' | 'movies' | 'series' | 'anime';
 }
 
-const BAR_ITEMS: NavItem[] = [
-  { to: '/', label: 'Inicio', icon: Home, end: true, requires: 'music' },
-  { to: '/search', label: 'Buscar', icon: Search },
-  { to: '/settings', label: 'Config', icon: Settings },
-];
-
 const MENU_ITEMS: NavItem[] = [
+  { to: '/', label: 'Inicio', icon: Home, requires: 'music' },
+  { to: '/search', label: 'Buscar', icon: Search },
   { to: '/my-list', label: 'Mi Lista', icon: Bookmark },
   { to: '/library', label: 'Biblioteca', icon: Library },
   { to: '/favorites', label: 'Favoritos', icon: Heart },
@@ -43,6 +38,7 @@ const MENU_ITEMS: NavItem[] = [
   { to: '/anime', label: 'Anime', icon: Swords, requires: 'anime' },
   { to: '/live-tv', label: 'TV en Vivo', icon: Radio },
   { to: '/forum', label: 'Foro', icon: MessageSquare },
+  { to: '/settings', label: 'Configuración', icon: Settings },
 ];
 
 export default function MobileNav() {
@@ -78,11 +74,11 @@ export default function MobileNav() {
 
       <div
         className={cn(
-          'fixed inset-x-0 bottom-16 z-50 border-t border-line bg-surface/95 backdrop-blur-xl transition-all duration-300 lg:hidden',
+          'fixed inset-x-0 bottom-0 z-50 max-h-[85vh] border-t border-line bg-surface/95 backdrop-blur-xl transition-all duration-300 lg:hidden',
           open ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none',
         )}
       >
-        <div className="max-h-[70vh] overflow-y-auto">
+        <div className="max-h-[85vh] overflow-y-auto">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <div className="flex items-center gap-3">
               {user ? (
@@ -155,47 +151,11 @@ export default function MobileNav() {
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface/95 backdrop-blur-xl lg:hidden">
-        {BAR_ITEMS.map(({ to, label, icon: Icon, end, requires }) => {
-          const disabled = isDisabled(requires);
-          return (
-            <NavLink
-              key={to}
-              to={disabled ? '#' : to}
-              end={end}
-              onClick={(e) => disabled && e.preventDefault()}
-              className={({ isActive }) =>
-                cn(
-                  'flex flex-1 flex-col items-center gap-0.5 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 text-[10px] font-medium transition-colors',
-                  disabled
-                    ? 'cursor-not-allowed opacity-30'
-                    : isActive
-                      ? 'text-fuchsia-300'
-                      : 'text-muted',
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className={cn(
-                      'flex items-center justify-center rounded-full px-3 py-1 transition-colors',
-                      isActive && !disabled && 'bg-brand/15',
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  {label}
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center border-t border-line bg-surface/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden">
         <button
           onClick={() => setOpen(!open)}
           className={cn(
-            'flex flex-1 flex-col items-center gap-0.5 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 text-[10px] font-medium transition-colors lg:hidden',
+            'flex flex-col items-center gap-0.5 text-[10px] font-medium transition-colors',
             open ? 'text-fuchsia-300' : 'text-muted',
           )}
         >
