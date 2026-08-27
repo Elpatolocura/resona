@@ -193,7 +193,7 @@ export const tmdb = {
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   },
 
-  async animeList(category: TmdbCategory): Promise<MediaVod[]> {
+  async animeList(category: TmdbCategory, language: string = 'all'): Promise<MediaVod[]> {
     const sortBy =
       category === 'top_rated' ? 'vote_average.desc' : 'popularity.desc';
     const baseParams: Params = {
@@ -206,22 +206,25 @@ export const tmdb = {
     const seen = new Set<number>();
     const results: MediaVod[] = [];
 
-    const [jaPages, esPages] = await Promise.all([
-      Promise.all([
-        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 1 }),
-        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 2 }),
-        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 3 }),
-        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 4 }),
-        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 5 }),
-      ]),
-      Promise.all([
-        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'es', page: 1 }),
-        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'es', page: 2 }),
-        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'es', page: 3 }),
-      ]),
-    ]);
+    const fetchPages = async (lang: string) => {
+      const pages = await Promise.all([
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: lang, page: 1 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: lang, page: 2 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: lang, page: 3 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: lang, page: 4 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: lang, page: 5 }),
+      ]);
+      return pages;
+    };
 
-    const allPages = [...jaPages, ...esPages];
+    let allPages;
+    if (language === 'all') {
+      const [jaPages, esPages] = await Promise.all([fetchPages('ja'), fetchPages('es')]);
+      allPages = [...jaPages, ...esPages];
+    } else {
+      allPages = await fetchPages(language);
+    }
+
     for (const data of allPages) {
       for (const item of data.results ?? []) {
         if (seen.has(item.id)) continue;
