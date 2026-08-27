@@ -596,7 +596,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-surface via-bg to-surface p-4">
+    <div className="flex h-dvh items-center justify-center overflow-hidden bg-gradient-to-br from-surface via-bg to-surface p-4 sm:h-auto sm:min-h-screen sm:overflow-visible">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px]" />
         <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-fuchsia-600/20 blur-[120px]" />
@@ -630,7 +630,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
           </button>
         )}
 
-        <div className="rounded-3xl border border-line bg-surface/80 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="max-h-[85vh] overflow-y-auto rounded-3xl border border-line bg-surface/80 p-8 shadow-2xl backdrop-blur-xl">
           <div className="mb-8 flex flex-col items-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand shadow-lg shadow-fuchsia-500/30">
               <Disc3 className="h-8 w-8 text-white" />

@@ -200,3 +200,12 @@ input[type='range']::-moz-range-thumb {
   border-radius: 999px;
   background: #ffffff;
 }
+
+@media (max-width: 1023px) {
+  .no-scroll-mobile {
+    overflow: hidden !important;
+  }
+  .no-scroll-mobile > * {
+    overflow: visible !important;
+  }
+}
