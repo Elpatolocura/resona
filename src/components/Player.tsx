@@ -103,38 +103,63 @@ export default function Player() {
         </div>
       )}
 
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 lg:h-20 lg:px-6">
-        <div
-          onClick={() => !isVideo && navigate('/player')}
-          className={cn(
-            'relative h-11 w-11 shrink-0 overflow-hidden rounded-lg shadow-lg lg:h-14 lg:w-14',
-            !isVideo && 'cursor-pointer transition hover:ring-2 hover:ring-fuchsia-400/50',
-          )}
-        >
-          {art ? (
-            <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-brand/25">
-              {isVideo ? (
-                currentMedia.kind === 'movie' ? (
-                  <Film className="h-5 w-5 text-fuchsia-300/70" />
-                ) : (
-                  <Tv className="h-5 w-5 text-fuchsia-300/70" />
-                )
-              ) : (
-                <Music2 className="h-5 w-5 text-fuchsia-300/70" />
-              )}
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-3 sm:gap-4 lg:h-20 lg:px-6">
+        {!isVideo && art ? (
+          <div
+            onClick={() => navigate('/player')}
+            className="relative h-11 w-11 shrink-0 cursor-pointer lg:h-14 lg:w-14"
+          >
+            <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 44 44">
+              <circle cx="22" cy="22" r="20" fill="none" stroke="rgba(139,92,246,0.15)" strokeWidth="2.5" />
+              <circle
+                cx="22" cy="22" r="20" fill="none" stroke="url(#progress-gradient)" strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 20}`}
+                strokeDashoffset={`${2 * Math.PI * 20 * (1 - (duration > 0 ? progress / duration : 0))}`}
+                className="transition-[stroke-dashoffset] duration-300"
+              />
+              <defs>
+                <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#ec4899" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className={cn(
+              'absolute inset-[3px] overflow-hidden rounded-full',
+              isPlaying && 'animate-[spin_4s_linear_infinite]',
+            )} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}>
+              <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
             </div>
-          )}
-          {!isVideo && (
-            <div
-              className={cn(
-                'absolute inset-0 rounded-lg ring-2 ring-inset ring-fuchsia-400/40 transition-opacity',
-                isPlaying ? 'opacity-100' : 'opacity-0',
-              )}
-            />
-          )}
-        </div>
+            {isPlaying && (
+              <div className="absolute inset-[3px] rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5),0_0_30px_rgba(236,72,153,0.3)]" />
+            )}
+          </div>
+        ) : (
+          <div
+            onClick={() => !isVideo && navigate('/player')}
+            className={cn(
+              'relative h-11 w-11 shrink-0 overflow-hidden rounded-full shadow-lg lg:h-14 lg:w-14',
+              !isVideo && 'cursor-pointer transition hover:ring-2 hover:ring-fuchsia-400/50',
+            )}
+          >
+            {art ? (
+              <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-brand/25">
+                {isVideo ? (
+                  currentMedia.kind === 'movie' ? (
+                    <Film className="h-5 w-5 text-fuchsia-300/70" />
+                  ) : (
+                    <Tv className="h-5 w-5 text-fuchsia-300/70" />
+                  )
+                ) : (
+                  <Music2 className="h-5 w-5 text-fuchsia-300/70" />
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="min-w-0 flex-1 overflow-hidden lg:max-w-56">
           <p className="truncate text-sm font-semibold text-text">{currentMedia.title}</p>
