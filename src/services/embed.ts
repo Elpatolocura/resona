@@ -53,8 +53,9 @@ const TEMPLATES: ProviderTemplate[] = [
 ];
 
 function buildProviders(vod: MediaVod): EmbedProvider[] {
-  const season = vod.kind === 'tv' ? (vod.season ?? 1) : 1;
-  const episode = vod.kind === 'tv' ? (vod.episode ?? 1) : 1;
+  const isTv = vod.kind === 'tv' || vod.kind === 'anime';
+  const season = isTv ? (vod.season ?? 1) : 1;
+  const episode = isTv ? (vod.episode ?? 1) : 1;
   return TEMPLATES.map((t) => ({
     id: t.id,
     name: t.name,

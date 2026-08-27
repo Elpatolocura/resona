@@ -78,7 +78,7 @@ export default function Player() {
   };
 
   const goToWatch = () => {
-    if (currentMedia.kind === 'movie' || currentMedia.kind === 'tv') {
+    if (currentMedia.kind === 'movie' || currentMedia.kind === 'tv' || currentMedia.kind === 'anime') {
       navigate(`/watch/${currentMedia.kind}/${currentMedia.tmdbId}`);
     }
   };

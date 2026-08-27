@@ -37,10 +37,11 @@ export default function WatchPage() {
     if (!currentMedia || currentMedia.id !== `${k}:${numId}`) return null;
     const season = querySeason ?? selectedSeason;
     const episode = queryEpisode ?? selectedEpisode;
+    const isTv = currentMedia.kind === 'tv' || currentMedia.kind === 'anime';
     return {
       ...currentMedia,
-      season: currentMedia.kind === 'tv' ? season : undefined,
-      episode: currentMedia.kind === 'tv' ? episode : undefined,
+      season: isTv ? season : undefined,
+      episode: isTv ? episode : undefined,
     };
   }, [currentMedia, k, numId, querySeason, queryEpisode, selectedSeason, selectedEpisode]);
 
@@ -49,17 +50,19 @@ export default function WatchPage() {
     setReady(false);
     getDetails(k, numId)
       .then((media) => {
-        if (media.kind === 'tv') {
+        const isTv = media.kind === 'tv' || media.kind === 'anime';
+        if (isTv) {
           setSelectedSeason(querySeason ?? 1);
           setSelectedEpisode(queryEpisode ?? 1);
         }
         return media;
       })
       .then((media) => {
+        const isTv = media.kind === 'tv' || media.kind === 'anime';
         const target: MediaVod = {
           ...media,
-          season: media.kind === 'tv' ? querySeason ?? 1 : undefined,
-          episode: media.kind === 'tv' ? queryEpisode ?? 1 : undefined,
+          season: isTv ? querySeason ?? 1 : undefined,
+          episode: isTv ? queryEpisode ?? 1 : undefined,
         };
         usePlayerStore.getState().playVideo(target);
         addToHistory(target);
@@ -127,7 +130,7 @@ export default function WatchPage() {
         <>
           <MediaPlayer vod={vod} />
 
-          {vod.kind === 'tv' && vod.seasons && vod.seasons > 0 && (
+          {(vod.kind === 'tv' || vod.kind === 'anime') && vod.seasons && vod.seasons > 0 && (
             <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface/60 p-4">
               <div className="flex items-center gap-2 text-sm text-muted">
                 <ListVideo className="h-4.5 w-4.5 text-fuchsia-300" />
