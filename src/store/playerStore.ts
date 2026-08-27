@@ -121,7 +121,7 @@ export const usePlayerStore = create<PlayerState>()(
             isLoading: false,
             progress: 0,
             duration: 0,
-            videoUrl: getWatchUrl(media),
+            videoUrl: media.kind !== 'forum' ? getWatchUrl(media) : null,
           });
         }
       };

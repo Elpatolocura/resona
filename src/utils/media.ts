@@ -52,6 +52,7 @@ export function mediaTitle(media: Media | null | undefined): string {
 export function mediaSubtitle(media: Media | null | undefined): string {
   if (!media) return '';
   if (media.kind === 'music') return media.subtitle;
+  if (media.kind === 'forum') return media.subtitle;
   const parts: string[] = [];
   if (media.year) parts.push(String(media.year));
   parts.push(media.kind === 'movie' ? 'Película' : 'Serie');

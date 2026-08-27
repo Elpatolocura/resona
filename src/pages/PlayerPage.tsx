@@ -143,7 +143,7 @@ export default function PlayerPage() {
 
   const handleFavorite = () => {
     if (currentMedia.kind === 'music') toggleFavorite(currentMedia.track);
-    else toggleVodFavorite(currentMedia);
+    else if (currentMedia.kind !== 'forum') toggleVodFavorite(currentMedia);
     toast(isFav ? 'Quitado de favoritos' : 'Añadido a favoritos', isFav ? 'info' : 'success');
   };
 

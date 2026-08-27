@@ -71,7 +71,7 @@ export default function Player() {
   const handleFavorite = () => {
     if (currentMedia.kind === 'music') {
       toggleFavorite(currentMedia.track);
-    } else {
+    } else if (currentMedia.kind !== 'forum') {
       toggleVodFavorite(currentMedia);
     }
     toast(isFav ? 'Quitado de favoritos' : 'Añadido a favoritos', isFav ? 'info' : 'success');
@@ -292,7 +292,7 @@ function QueuePanel() {
   const isPlaying = usePlayerStore((s) => s.isPlaying);
 
   const subtitle = (media: Media) =>
-    media.kind === 'music' ? media.subtitle : vodMediaTypeLabel(media);
+    media.kind === 'music' ? media.subtitle : media.kind === 'forum' ? media.subtitle : vodMediaTypeLabel(media);
 
   return (
     <div className="absolute bottom-full right-0 max-h-72 w-full max-w-sm overflow-y-auto border-t border-line bg-surface/95 backdrop-blur-xl sm:right-3 sm:rounded-t-2xl">

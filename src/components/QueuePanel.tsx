@@ -169,7 +169,7 @@ export default function QueuePanel({ className, onClose }: QueuePanelProps) {
                     </div>
 
                     <span className="text-[11px] tabular-nums text-faint">
-                      {media.kind === 'music' ? formatTime(media.duration) : media.runtime ? `${media.runtime}m` : ''}
+                      {media.kind === 'music' ? formatTime(media.duration) : media.kind !== 'forum' && media.runtime ? `${media.runtime}m` : ''}
                     </span>
 
                     <button

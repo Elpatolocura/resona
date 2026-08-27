@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Film, Music2, Play, Star, Trash2, Tv } from 'lucide-react';
-import type { AudiusTrack, Media } from '../../types';
+import type { AudiusTrack, Media, MediaVod } from '../../types';
 import { usePlayerStore } from '../../store/playerStore';
 import { formatTime, imageUrl, isPlayable } from '../../utils/format';
 import { cn } from '../../utils/format';
@@ -159,12 +159,13 @@ export default function MediaList({
           );
         }
 
-        const rating = formatRating(media.rating);
+        const vodMedia = media as MediaVod;
+        const rating = formatRating(vodMedia.rating);
         return (
           <div
             key={media.id}
             className="group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-surface-2/70"
-            onClick={() => navigate(`/watch/${media.kind}/${media.tmdbId}`)}
+            onClick={() => navigate(`/watch/${media.kind}/${vodMedia.tmdbId}`)}
           >
             <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg">
               {media.poster ? (
@@ -201,7 +202,7 @@ export default function MediaList({
             )}
 
             <span className="hidden shrink-0 rounded-full border border-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-faint sm:block">
-              {vodMediaTypeLabel(media)}
+              {vodMediaTypeLabel(vodMedia)}
             </span>
 
             {canRemove && (

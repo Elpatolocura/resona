@@ -289,7 +289,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
   const renderPreferenceStep = (
     title: string,
     subtitle: string,
-    icon: typeof Music2,
+    Icon: typeof Music2,
     genres: string[],
     selected: string[],
     onToggle: (g: string) => void,
@@ -301,7 +301,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/20">
-          <icon className="h-5 w-5 text-fuchsia-300" />
+          <Icon className="h-5 w-5 text-fuchsia-300" />
         </div>
         <div>
           <h3 className="font-bold text-text">{title}</h3>
