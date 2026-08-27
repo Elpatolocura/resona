@@ -194,21 +194,25 @@ export const tmdb = {
   },
 
   async animeList(category: TmdbCategory): Promise<MediaVod[]> {
-    let path: string;
-    if (category === 'trending') path = '/trending/tv/week';
-    else if (category === 'popular') path = '/tv/popular';
-    else path = '/tv/top_rated';
+    const sortBy =
+      category === 'top_rated' ? 'vote_average.desc' : 'popularity.desc';
+    const baseParams: Params = {
+      sort_by: sortBy,
+      with_genres: 16,
+      with_original_language: 'ja',
+      ...(category === 'top_rated' ? { 'vote_count.gte': 50 } : {}),
+    };
 
     const genres = await getGenres('tv');
     const seen = new Set<number>();
     const results: MediaVod[] = [];
 
     const pages = await Promise.all([
-      request<TmdbListResponse>(path, { with_genres: 16, page: 1 }),
-      request<TmdbListResponse>(path, { with_genres: 16, page: 2 }),
-      request<TmdbListResponse>(path, { with_genres: 16, page: 3 }),
-      request<TmdbListResponse>(path, { with_genres: 16, page: 4 }),
-      request<TmdbListResponse>(path, { with_genres: 16, page: 5 }),
+      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 1 }),
+      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 2 }),
+      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 3 }),
+      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 4 }),
+      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 5 }),
     ]);
 
     for (const data of pages) {
@@ -216,7 +220,6 @@ export const tmdb = {
         if (seen.has(item.id)) continue;
         seen.add(item.id);
         const normalized = normalizeItem(item, 'tv', genres, 'anime');
-        if (normalized.originalLanguage && !ALLOWED_LANGUAGES.has(normalized.originalLanguage)) continue;
         results.push(normalized);
       }
     }
