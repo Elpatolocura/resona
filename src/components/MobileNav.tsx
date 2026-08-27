@@ -151,25 +151,17 @@ export default function MobileNav() {
         </div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center border-t border-line bg-surface/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden">
-        <button
-          onClick={() => setOpen(!open)}
-          className={cn(
-            'flex flex-col items-center gap-0.5 text-[10px] font-medium transition-colors',
-            open ? 'text-fuchsia-300' : 'text-muted',
-          )}
-        >
-          <span
-            className={cn(
-              'flex items-center justify-center rounded-full px-3 py-1 transition-colors',
-              open && 'bg-brand/15',
-            )}
-          >
-            <Menu className="h-5 w-5" />
-          </span>
-          Menú
-        </button>
-      </nav>
+      <button
+        onClick={() => setOpen(!open)}
+        className={cn(
+          'fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 lg:hidden',
+          open
+            ? 'rotate-45 bg-fuchsia-500 text-white shadow-fuchsia-500/40'
+            : 'bg-brand text-white shadow-brand/40',
+        )}
+      >
+        {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </button>
     </>
   );
 }
