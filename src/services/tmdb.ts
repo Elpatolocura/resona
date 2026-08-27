@@ -199,7 +199,6 @@ export const tmdb = {
     const baseParams: Params = {
       sort_by: sortBy,
       with_genres: 16,
-      with_original_language: 'ja',
       ...(category === 'top_rated' ? { 'vote_count.gte': 50 } : {}),
     };
 
@@ -207,15 +206,23 @@ export const tmdb = {
     const seen = new Set<number>();
     const results: MediaVod[] = [];
 
-    const pages = await Promise.all([
-      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 1 }),
-      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 2 }),
-      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 3 }),
-      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 4 }),
-      request<TmdbListResponse>('/discover/tv', { ...baseParams, page: 5 }),
+    const [jaPages, esPages] = await Promise.all([
+      Promise.all([
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 1 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 2 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 3 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 4 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'ja', page: 5 }),
+      ]),
+      Promise.all([
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'es', page: 1 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'es', page: 2 }),
+        request<TmdbListResponse>('/discover/tv', { ...baseParams, with_original_language: 'es', page: 3 }),
+      ]),
     ]);
 
-    for (const data of pages) {
+    const allPages = [...jaPages, ...esPages];
+    for (const data of allPages) {
       for (const item of data.results ?? []) {
         if (seen.has(item.id)) continue;
         seen.add(item.id);

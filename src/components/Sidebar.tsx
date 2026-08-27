@@ -13,6 +13,7 @@ import {
   Disc3,
   Tv,
   Swords,
+  Radio,
   Settings,
   LogIn,
   LogOut,
@@ -47,6 +48,7 @@ const MEDIA_NAV: NavItem[] = [
   { to: '/movies', label: 'Películas', icon: Clapperboard, requires: 'movies' },
   { to: '/tv', label: 'Series', icon: Tv, requires: 'series' },
   { to: '/anime', label: 'Anime', icon: Swords, requires: 'anime' },
+  { to: '/live-tv', label: 'TV en Vivo', icon: Radio },
 ];
 
 export default function Sidebar() {
