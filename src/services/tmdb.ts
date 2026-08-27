@@ -96,9 +96,9 @@ async function getGenres(kind: TmdbKind): Promise<Map<number, string>> {
   return map;
 }
 
-function normalizeItem(item: TmdbItem, kind: TmdbKind, genres?: Map<number, string>): MediaVod {
+function normalizeItem(item: TmdbItem, kind: TmdbKind, genres?: Map<number, string>, forceKind?: 'movie' | 'tv' | 'anime'): MediaVod {
   const isMovie = kind === 'movie' || item.media_type === 'movie';
-  const k: TmdbKind = isMovie ? 'movie' : 'tv';
+  const k: MediaVod['kind'] = forceKind ?? (isMovie ? 'movie' : 'tv');
   const date = isMovie ? item.release_date : item.first_air_date;
   const title = isMovie ? item.title : item.name;
   const genreIds = item.genre_ids ?? [];
@@ -190,6 +190,42 @@ export const tmdb = {
 
   async genres(kind: TmdbKind): Promise<GenreOption[]> {
     const map = await getGenres(kind);
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  },
+
+  async animeList(category: TmdbCategory): Promise<MediaVod[]> {
+    let path: string;
+    if (category === 'trending') path = '/trending/tv/week';
+    else if (category === 'popular') path = '/tv/popular';
+    else path = '/tv/top_rated';
+
+    const genres = await getGenres('tv');
+    const seen = new Set<number>();
+    const results: MediaVod[] = [];
+
+    const pages = await Promise.all([
+      request<TmdbListResponse>(path, { with_genres: 16, page: 1 }),
+      request<TmdbListResponse>(path, { with_genres: 16, page: 2 }),
+      request<TmdbListResponse>(path, { with_genres: 16, page: 3 }),
+      request<TmdbListResponse>(path, { with_genres: 16, page: 4 }),
+      request<TmdbListResponse>(path, { with_genres: 16, page: 5 }),
+    ]);
+
+    for (const data of pages) {
+      for (const item of data.results ?? []) {
+        if (seen.has(item.id)) continue;
+        seen.add(item.id);
+        const normalized = normalizeItem(item, 'tv', genres, 'anime');
+        if (normalized.originalLanguage && !ALLOWED_LANGUAGES.has(normalized.originalLanguage)) continue;
+        results.push(normalized);
+      }
+    }
+
+    return results;
+  },
+
+  async animeGenres(): Promise<GenreOption[]> {
+    const map = await getGenres('tv');
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   },
 

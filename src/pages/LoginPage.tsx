@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Disc3, Mail, Lock, User, Eye, EyeOff, ArrowLeft, ArrowRight, Music2, Film, Tv, Globe, Moon, Sun, Settings, Check } from 'lucide-react';
+import { Disc3, Mail, Lock, User, Eye, EyeOff, ArrowLeft, ArrowRight, Music2, Film, Tv, Swords, Globe, Moon, Sun, Settings, Check } from 'lucide-react';
 import { useAuthStore, UserPreferences } from '../store/authStore';
 import { useTheme } from '../components/ThemeProvider';
 import { useLanguage, LANGUAGES } from '../components/LanguageProvider';
@@ -8,11 +8,12 @@ import { useContent, ContentSettings } from '../components/ContentProvider';
 import { cn } from '../utils/format';
 import { toast } from '../store/toastStore';
 
-type Step = 'login' | 'register' | 'preferences-music' | 'preferences-movies' | 'preferences-series' | 'preferences-setup' | 'forgot' | 'reset-password' | 'reset-sent';
+type Step = 'login' | 'register' | 'preferences-music' | 'preferences-movies' | 'preferences-series' | 'preferences-anime' | 'preferences-setup' | 'forgot' | 'reset-password' | 'reset-sent';
 
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electrónica', 'Reggaetón', 'Salsa', 'Bachata', 'Indie', 'Clásica', 'Jazz', 'Metal', 'Country', 'Folk', 'K-Pop', 'Latin'];
 const MOVIE_GENRES = ['Acción', 'Comedia', 'Drama', 'Terror', 'Ciencia ficción', 'Romance', 'Animación', 'Thriller', 'Aventura', 'Fantasía', 'Documental', 'Musical', 'Crimen', 'Misterio'];
 const SERIES_GENRES = ['Drama', 'Comedia', 'Ciencia ficción', 'Crimen', 'Thriller', 'Fantasía', 'Romance', 'Documental', 'Acción', 'Animación', 'Horror', 'Reality', 'Anime', 'Medical'];
+const ANIME_GENRES = ['Shōnen', 'Shōjo', 'Seinen', 'Josei', 'Mecha', 'Isekai', 'Romance', 'Comedia', 'Drama', 'Acción', 'Fantasía', 'Ciencia ficción', 'Terror', 'Deportes', 'Sobrenatural', 'Slice of Life'];
 
 interface LoginPageProps {
   onPreferencesSaved?: () => void;
@@ -38,6 +39,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
   const [selectedMusic, setSelectedMusic] = useState<string[]>([]);
   const [selectedMovies, setSelectedMovies] = useState<string[]>([]);
   const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
+  const [selectedAnime, setSelectedAnime] = useState<string[]>([]);
   const [prefLanguage, setPrefLanguage] = useState('system');
   const [prefTheme, setPrefTheme] = useState('dark');
 
@@ -57,7 +59,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
           setTheme(prefs.theme as 'dark' | 'light' | 'system');
           setLanguage(prefs.language as 'system' | 'es' | 'en' | 'pt' | 'fr');
           if (prefs.musicGenres.length === 0 && prefs.movieGenres.length === 0) {
-            setContent({ showMusic: true, showMovies: true, showSeries: true, explicitContent: false });
+            setContent({ showMusic: true, showMovies: true, showSeries: true, showAnime: true, explicitContent: false });
           }
         }
         toast('Bienvenido de vuelta', 'success');
@@ -92,6 +94,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
       musicGenres: selectedMusic,
       movieGenres: selectedMovies,
       seriesGenres: selectedSeries,
+      animeGenres: selectedAnime,
       language: prefLanguage,
       theme: prefTheme,
     };
@@ -102,6 +105,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
       showMusic: selectedMusic.length > 0,
       showMovies: selectedMovies.length > 0,
       showSeries: selectedSeries.length > 0,
+      showAnime: selectedAnime.length > 0,
       explicitContent: false,
     });
     if (onPreferencesSaved) {
@@ -606,7 +610,8 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
               else if (step === 'preferences-music') setStep('register');
               else if (step === 'preferences-movies') setStep('preferences-music');
               else if (step === 'preferences-series') setStep('preferences-movies');
-              else if (step === 'preferences-setup') setStep('preferences-series');
+              else if (step === 'preferences-anime') setStep('preferences-series');
+              else if (step === 'preferences-setup') setStep('preferences-anime');
             }}
             className="mb-6 flex items-center gap-2 text-sm text-muted transition hover:text-text"
           >
@@ -640,6 +645,7 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
               {step === 'preferences-music' && '¿Qué música te gusta?'}
               {step === 'preferences-movies' && '¿Qué películas prefieres?'}
               {step === 'preferences-series' && '¿Qué series te interesan?'}
+              {step === 'preferences-anime' && '¿Qué tipos de anime prefieres?'}
               {step === 'preferences-setup' && 'Personaliza tu experiencia'}
             </p>
           </div>
@@ -678,9 +684,20 @@ export default function LoginPage({ onPreferencesSaved }: LoginPageProps) {
             SERIES_GENRES,
             selectedSeries,
             (g) => toggleGenre(g, selectedSeries, setSelectedSeries),
-            () => setStep('preferences-setup'),
+            () => setStep('preferences-anime'),
             () => setStep('preferences-movies'),
-            3, 3,
+            3, 4,
+          )}
+          {step === 'preferences-anime' && renderPreferenceStep(
+            'Géneros de anime',
+            '¿Qué tipos de anime prefieres?',
+            Swords,
+            ANIME_GENRES,
+            selectedAnime,
+            (g) => toggleGenre(g, selectedAnime, setSelectedAnime),
+            () => setStep('preferences-setup'),
+            () => setStep('preferences-series'),
+            4, 4,
           )}
           {step === 'preferences-setup' && renderPreferencesSetup()}
 

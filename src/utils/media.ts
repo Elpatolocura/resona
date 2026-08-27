@@ -36,7 +36,7 @@ export function isVod(media: Media | null | undefined): media is MediaVod {
 }
 
 export function isVodItem(item: { kind?: string }): boolean {
-  return item?.kind === 'movie' || item?.kind === 'tv';
+  return item?.kind === 'movie' || item?.kind === 'tv' || item?.kind === 'anime';
 }
 
 export function mediaPoster(media: Media | null | undefined): string | null {
@@ -55,7 +55,9 @@ export function mediaSubtitle(media: Media | null | undefined): string {
   if (media.kind === 'forum') return media.subtitle;
   const parts: string[] = [];
   if (media.year) parts.push(String(media.year));
-  parts.push(media.kind === 'movie' ? 'Película' : 'Serie');
+  if (media.kind === 'anime') parts.push('Anime');
+  else if (media.kind === 'movie') parts.push('Película');
+  else parts.push('Serie');
   return parts.join(' · ');
 }
 
@@ -83,5 +85,6 @@ export function formatRuntime(minutes: number | null | undefined): string {
 }
 
 export function vodMediaTypeLabel(vod: MediaVod): string {
+  if (vod.kind === 'anime') return 'Anime';
   return vod.kind === 'movie' ? 'Película' : 'Serie';
 }

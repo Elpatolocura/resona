@@ -5,6 +5,7 @@ export interface UserPreferences {
   musicGenres: string[];
   movieGenres: string[];
   seriesGenres: string[];
+  animeGenres: string[];
   language: string;
   theme: string;
 }

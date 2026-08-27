@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Film, Heart, Play, Sparkles, TrendingUp, Tv, UserRound, Disc3, ListMusic } from 'lucide-react';
+import { ChevronRight, Film, Heart, Play, Sparkles, TrendingUp, Tv, Swords, UserRound, Disc3, ListMusic } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { audius } from '../services/audius';
 import { tmdb } from '../services/tmdb';
@@ -27,6 +27,7 @@ export default function HomePage() {
   const playlists = useApi(() => audius.trendingPlaylists('playlist'), []);
   const movies = useApi(() => tmdb.list('movie', 'trending'), []);
   const series = useApi(() => tmdb.list('tv', 'trending'), []);
+  const anime = useApi(() => tmdb.animeList('trending'), []);
 
   const [songsPage, setSongsPage] = useState(1);
   const [songsPerPage, setSongsPerPage] = useState(18);
@@ -34,6 +35,8 @@ export default function HomePage() {
   const [moviesPerPage, setMoviesPerPage] = useState(12);
   const [seriesPage, setSeriesPage] = useState(1);
   const [seriesPerPage, setSeriesPerPage] = useState(12);
+  const [animePage, setAnimePage] = useState(1);
+  const [animePerPage, setAnimePerPage] = useState(12);
   const [albumsPage, setAlbumsPage] = useState(1);
   const [albumsPerPage, setAlbumsPerPage] = useState(18);
   const [playlistsPage, setPlaylistsPage] = useState(1);
@@ -56,6 +59,10 @@ export default function HomePage() {
   const allSeries = series.data ?? [];
   const paginatedSeries = allSeries.slice((seriesPage - 1) * seriesPerPage, seriesPage * seriesPerPage);
   const totalSeriesPages = Math.ceil(allSeries.length / seriesPerPage);
+
+  const allAnime = anime.data ?? [];
+  const paginatedAnime = allAnime.slice((animePage - 1) * animePerPage, animePage * animePerPage);
+  const totalAnimePages = Math.ceil(allAnime.length / animePerPage);
 
   const allAlbums = albums.data ?? [];
   const paginatedAlbums = allAlbums.slice((albumsPage - 1) * albumsPerPage, albumsPage * albumsPerPage);
@@ -206,6 +213,35 @@ export default function HomePage() {
           emptyTitle="Sin series"
         />
         <Pagination currentPage={seriesPage} totalPages={totalSeriesPages} onPageChange={setSeriesPage} />
+      </Section>
+
+      <Section
+        title="Anime en tendencia"
+        subtitle="Los mejores animes esta semana en TMDB"
+        icon={Swords}
+        action={
+          <Link
+            to="/anime"
+            className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted transition hover:text-fuchsia-300"
+          >
+            Ver todos <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        }
+      >
+        <ItemsPerPageSelector
+          value={animePerPage}
+          onChange={(v) => { setAnimePerPage(v); setAnimePage(1); }}
+          options={ITEMS_PER_PAGE_OPTIONS}
+        />
+        <MediaGrid
+          items={paginatedAnime}
+          loading={anime.loading}
+          error={anime.error}
+          onRetry={anime.refetch}
+          skeletonCount={6}
+          emptyTitle="Sin anime"
+        />
+        <Pagination currentPage={animePage} totalPages={totalAnimePages} onPageChange={setAnimePage} />
       </Section>
 
       <Section

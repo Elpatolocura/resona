@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Film, ListMusic, Music2, Search, TrendingUp, Tv, UserRound, Disc3 } from 'lucide-react';
+import { Film, ListMusic, Music2, Search, TrendingUp, Tv, Swords, UserRound, Disc3 } from 'lucide-react';
 import { audius } from '../services/audius';
 import { tmdb } from '../services/tmdb';
 import { useApi } from '../hooks/useApi';
@@ -75,6 +75,7 @@ export default function SearchPage() {
   const mediaItems = mediaResults.data ?? [];
   const movieResults = mediaItems.filter((m) => m.kind === 'movie');
   const tvResults = mediaItems.filter((m) => m.kind === 'tv');
+  const animeResults = mediaItems.filter((m) => m.kind === 'anime');
 
   const playSearch = (index: number, track: AudiusTrack) => {
     usePlayerStore.getState().playFrom(tracks.data ?? [], index);
@@ -176,6 +177,21 @@ export default function SearchPage() {
           <p className="text-sm text-faint">Sin series coincidentes.</p>
         ) : (
           <MediaGrid items={tvResults.slice(0, 12)} />
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-faint">
+          <Swords className="h-4 w-4" /> Anime
+        </h2>
+        {mediaResults.error ? (
+          <ErrorState message={mediaResults.error} onRetry={mediaResults.refetch} compact />
+        ) : mediaResults.loading ? (
+          <MediaGrid loading skeletonCount={6} />
+        ) : animeResults.length === 0 ? (
+          <p className="text-sm text-faint">Sin anime coincidentes.</p>
+        ) : (
+          <MediaGrid items={animeResults.slice(0, 12)} />
         )}
       </section>
 

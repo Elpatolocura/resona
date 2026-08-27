@@ -4,6 +4,7 @@ export interface ContentSettings {
   showMusic: boolean;
   showMovies: boolean;
   showSeries: boolean;
+  showAnime: boolean;
   explicitContent: boolean;
   spanishOnly?: boolean;
 }
@@ -18,6 +19,7 @@ const DEFAULT_CONTENT: ContentSettings = {
   showMusic: true,
   showMovies: true,
   showSeries: true,
+  showAnime: true,
   explicitContent: false,
   spanishOnly: false,
 };

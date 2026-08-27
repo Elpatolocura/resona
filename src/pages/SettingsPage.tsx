@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Settings, User, Music2, Film, Tv, Bell, Moon, Sun, Volume2, Globe, Save, Trash2, Sparkles, Check } from 'lucide-react';
+import { Settings, User, Music2, Film, Tv, Swords, Bell, Moon, Sun, Volume2, Globe, Save, Trash2, Sparkles, Check } from 'lucide-react';
 import { cn } from '../utils/format';
 import { toast } from '../store/toastStore';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -93,6 +93,7 @@ export default function SettingsPage() {
     musicGenres: user?.preferences?.musicGenres || [],
     movieGenres: user?.preferences?.movieGenres || [],
     seriesGenres: user?.preferences?.seriesGenres || [],
+    animeGenres: user?.preferences?.animeGenres || [],
     language: user?.preferences?.language || language || 'system',
     theme: user?.preferences?.theme || theme || 'dark',
   });
@@ -110,6 +111,7 @@ export default function SettingsPage() {
     musicGenres: user?.preferences?.musicGenres || [],
     movieGenres: user?.preferences?.movieGenres || [],
     seriesGenres: user?.preferences?.seriesGenres || [],
+    animeGenres: user?.preferences?.animeGenres || [],
     language: user?.preferences?.language || language || 'system',
     theme: user?.preferences?.theme || theme || 'dark',
   });
@@ -129,6 +131,7 @@ export default function SettingsPage() {
           musicGenres: user.preferences.musicGenres || [],
           movieGenres: user.preferences.movieGenres || [],
           seriesGenres: user.preferences.seriesGenres || [],
+          animeGenres: user.preferences.animeGenres || [],
           language: user.preferences.language || language || 'system',
           theme: user.preferences.theme || theme || 'dark',
         };
@@ -566,6 +569,28 @@ export default function SettingsPage() {
                     <span className={cn(
                       'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
                       draftContent.showSeries ? 'left-5.5' : 'left-0.5',
+                    )} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between rounded-xl border border-line p-4">
+                  <div className="flex items-center gap-3">
+                    <Swords className="h-5 w-5 text-red-300" />
+                    <div>
+                      <p className="font-medium text-text">Anime</p>
+                      <p className="text-sm text-muted">Mostrar anime en tendencia</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setDraftContent((c) => ({ ...c, showAnime: !c.showAnime }))}
+                    className={cn(
+                      'relative h-6 w-11 rounded-full transition',
+                      draftContent.showAnime ? 'bg-brand' : 'bg-surface-3',
+                    )}
+                  >
+                    <span className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                      draftContent.showAnime ? 'left-5.5' : 'left-0.5',
                     )} />
                   </button>
                 </div>

@@ -49,7 +49,7 @@ export interface AudiusPlaylist {
 
 import type { ForumPost } from '../utils/forumData';
 
-export type MediaKind = 'music' | 'movie' | 'tv' | 'forum';
+export type MediaKind = 'music' | 'movie' | 'tv' | 'anime' | 'forum';
 
 export interface MusicMedia {
   kind: 'music';
@@ -62,7 +62,7 @@ export interface MusicMedia {
 }
 
 export interface MediaVod {
-  kind: 'movie' | 'tv';
+  kind: 'movie' | 'tv' | 'anime';
   id: string;
   tmdbId: number;
   title: string;

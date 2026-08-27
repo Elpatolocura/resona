@@ -33,7 +33,7 @@ export default function MediaCard({ media, className, onRemove }: MediaCardProps
             src={media.poster}
             alt={media.title}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            fallbackType={media.kind === 'movie' ? 'movie' : 'tv'}
+            fallbackType={media.kind === 'movie' ? 'movie' : media.kind === 'anime' ? 'anime' : 'tv'}
           />
 
           <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

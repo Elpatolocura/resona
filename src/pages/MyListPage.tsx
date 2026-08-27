@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Film, MessageSquare, Music2, Play, Trash2, Tv } from 'lucide-react';
+import { Bookmark, Film, MessageSquare, Music2, Play, Trash2, Tv, Swords } from 'lucide-react';
 import { useLibraryStore } from '../store/libraryStore';
 import { usePlayerStore } from '../store/playerStore';
 import TrackList from '../components/TrackList';
@@ -10,13 +10,14 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import type { AudiusTrack, Media, MediaForum, MediaVod, MusicMedia } from '../types';
 import { cn } from '../utils/format';
 
-type Filter = 'all' | 'music' | 'movie' | 'tv' | 'forum';
+type Filter = 'all' | 'music' | 'movie' | 'tv' | 'anime' | 'forum';
 
 const FILTERS: { id: Filter; label: string; icon: typeof Bookmark }[] = [
   { id: 'all', label: 'Todo', icon: Bookmark },
   { id: 'music', label: 'Música', icon: Music2 },
   { id: 'movie', label: 'Películas', icon: Film },
   { id: 'tv', label: 'Series', icon: Tv },
+  { id: 'anime', label: 'Anime', icon: Swords },
   { id: 'forum', label: 'Foro', icon: MessageSquare },
 ];
 
@@ -31,10 +32,11 @@ export default function MyListPage() {
   const musicItems = myList.filter((m): m is MusicMedia => m.kind === 'music');
   const movieItems = myList.filter((m): m is MediaVod => m.kind === 'movie');
   const tvItems = myList.filter((m): m is MediaVod => m.kind === 'tv');
+  const animeItems = myList.filter((m): m is MediaVod => m.kind === 'anime');
   const forumItems = myList.filter((m): m is MediaForum => m.kind === 'forum');
 
   const tracks: AudiusTrack[] = musicItems.map((m) => m.track);
-  const vodItems: MediaVod[] = filter === 'movie' ? movieItems : filter === 'tv' ? tvItems : [...movieItems, ...tvItems];
+  const vodItems: MediaVod[] = filter === 'movie' ? movieItems : filter === 'tv' ? tvItems : filter === 'anime' ? animeItems : [...movieItems, ...tvItems, ...animeItems];
 
   const total = myList.length;
 

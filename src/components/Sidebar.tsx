@@ -12,6 +12,7 @@ import {
   Search,
   Disc3,
   Tv,
+  Swords,
   Settings,
   LogIn,
   LogOut,
@@ -28,7 +29,7 @@ interface NavItem {
   label: string;
   icon: typeof Home;
   end?: boolean;
-  requires?: 'music' | 'movies' | 'series';
+  requires?: 'music' | 'movies' | 'series' | 'anime';
 }
 
 const NAV: NavItem[] = [
@@ -45,6 +46,7 @@ const NAV: NavItem[] = [
 const MEDIA_NAV: NavItem[] = [
   { to: '/movies', label: 'Películas', icon: Clapperboard, requires: 'movies' },
   { to: '/tv', label: 'Series', icon: Tv, requires: 'series' },
+  { to: '/anime', label: 'Anime', icon: Swords, requires: 'anime' },
 ];
 
 export default function Sidebar() {
@@ -55,11 +57,12 @@ export default function Sidebar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  const isDisabled = (requires?: 'music' | 'movies' | 'series') => {
+  const isDisabled = (requires?: 'music' | 'movies' | 'series' | 'anime') => {
     if (!requires) return false;
     if (requires === 'music') return !content.showMusic;
     if (requires === 'movies') return !content.showMovies;
     if (requires === 'series') return !content.showSeries;
+    if (requires === 'anime') return !content.showAnime;
     return false;
   };
 

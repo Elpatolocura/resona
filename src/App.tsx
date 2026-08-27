@@ -16,6 +16,7 @@ import AlbumPage from './pages/AlbumPage';
 import ArtistPage from './pages/ArtistPage';
 import MoviesPage from './pages/MoviesPage';
 import TvShowsPage from './pages/TvShowsPage';
+import AnimePage from './pages/AnimePage';
 import MediaDetailPage from './pages/MediaDetailPage';
 import WatchPage from './pages/WatchPage';
 import ForumPage from './pages/ForumPage';
@@ -54,6 +55,7 @@ export default function App() {
                 <Route path="/artist/:id" element={<ArtistPage />} />
                 <Route path="/movies" element={<MoviesPage />} />
                 <Route path="/tv" element={<TvShowsPage />} />
+                <Route path="/anime" element={<AnimePage />} />
                 <Route path="/media/:kind/:id" element={<MediaDetailPage />} />
                 <Route path="/watch/:kind/:id" element={<WatchPage />} />
                 <Route path="/forum" element={<ForumPage />} />

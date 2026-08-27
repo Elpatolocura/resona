@@ -14,7 +14,7 @@ export default function WatchPage() {
   const { kind, id } = useParams<{ kind: string; id: string }>();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  const k = (kind === 'tv' ? 'tv' : 'movie') as TmdbKind;
+  const k = (kind === 'tv' || kind === 'anime' ? 'tv' : 'movie') as TmdbKind;
   const numId = Number(id);
 
   const currentMedia = useMediaStore((s) => s.currentMedia);
