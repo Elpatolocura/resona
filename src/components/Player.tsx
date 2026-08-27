@@ -21,6 +21,8 @@ export default function Player() {
   const progress = usePlayerStore((s) => s.progress);
   const duration = usePlayerStore((s) => s.duration);
   const showQueue = usePlayerStore((s) => s.showQueue);
+  const queue = usePlayerStore((s) => s.queue);
+  const queueIndex = usePlayerStore((s) => s.queueIndex);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const next = usePlayerStore((s) => s.next);
   const prev = usePlayerStore((s) => s.prev);
@@ -279,6 +281,26 @@ export default function Player() {
       </div>
 
       {showQueue && <QueuePanel />}
+
+      {!isVideo && queue.length > 0 && (
+        <button
+          onClick={toggleQueue}
+          aria-label="Cola de reproducción"
+          className={cn(
+            'fixed bottom-24 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-xl transition-all hover:scale-110 lg:hidden',
+            showQueue
+              ? 'bg-fuchsia-500 text-white shadow-fuchsia-500/40'
+              : 'bg-surface-2 text-muted border border-line hover:text-fuchsia-300',
+          )}
+        >
+          <ListMusic className="h-5 w-5" />
+          {queue.length > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-fuchsia-500 px-1 text-[10px] font-bold text-white">
+              {queue.length}
+            </span>
+          )}
+        </button>
+      )}
     </div>
   );
 }

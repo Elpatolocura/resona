@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Radio, Search, Globe, Play, Pause, Volume2, VolumeX, Maximize, ChevronDown, Loader2, AlertCircle, X } from 'lucide-react';
-import { fetchIptvChannels, filterChannels, getUniqueCountries, IPTV_CATEGORIES, type IptvChannel, type IptvCategory } from '../services/iptv';
+import { Radio, Search, Play, Pause, Volume2, VolumeX, Maximize, Loader2, AlertCircle } from 'lucide-react';
+import { fetchIptvChannels, filterChannels, IPTV_CATEGORIES, type IptvChannel, type IptvCategory } from '../services/iptv';
 import { cn } from '../utils/format';
 
 export default function LiveTVPage() {
@@ -10,8 +10,6 @@ export default function LiveTVPage() {
   const [selected, setSelected] = useState<IptvChannel | null>(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<IptvCategory>('All');
-  const [country, setCountry] = useState('All');
-  const [countries, setCountries] = useState<string[]>([]);
   const [muted, setMuted] = useState(false);
   const [playing, setPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -20,7 +18,6 @@ export default function LiveTVPage() {
     fetchIptvChannels()
       .then((data) => {
         setChannels(data);
-        setCountries(getUniqueCountries(data));
         if (data.length > 0) setSelected(data[0]);
       })
       .catch((err) => setError(err.message))
@@ -38,7 +35,7 @@ export default function LiveTVPage() {
     if (videoRef.current) videoRef.current.muted = muted;
   }, [muted]);
 
-  const filtered = filterChannels(channels, search, category, country);
+  const filtered = filterChannels(channels, search, category, 'All');
 
   const toggleFullscreen = () => {
     const el = videoRef.current?.parentElement;
@@ -76,7 +73,7 @@ export default function LiveTVPage() {
           <Radio className="h-6 w-6 text-fuchsia-300" /> TV en Vivo
         </h1>
         <p className="mt-1 text-sm text-muted">
-          {channels.length} canales de televisión abierta en vivo
+          {channels.length} canales de televisión colombiana en vivo
         </p>
       </div>
 
@@ -155,22 +152,6 @@ export default function LiveTVPage() {
                 placeholder="Buscar canal..."
                 className="w-full rounded-xl border border-line bg-surface-2 py-2.5 pl-10 pr-4 text-sm text-text outline-none transition placeholder:text-faint focus:border-fuchsia-400/50"
               />
-            </div>
-            <div className="relative">
-              <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="appearance-none rounded-xl border border-line bg-surface-2 py-2.5 pl-10 pr-10 text-sm text-text outline-none transition focus:border-fuchsia-400/50"
-              >
-                <option value="All">Todos los países</option>
-                {countries.map((c) => (
-                  <option key={c} value={c.match(/\((.+)\)/)?.[1] || c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             </div>
           </div>
 

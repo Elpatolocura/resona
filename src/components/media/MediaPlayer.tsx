@@ -108,6 +108,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
               referrerPolicy="origin"
               className="h-full w-full"
               onLoad={() => setLoaded(true)}
+              onError={() => setLoaded(true)}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">

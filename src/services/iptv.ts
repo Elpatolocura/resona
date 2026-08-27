@@ -28,7 +28,7 @@ export async function fetchIptvChannels(): Promise<IptvChannel[]> {
   if (!res.ok) throw new Error('Error al cargar canales IPTV');
 
   const data = (await res.json()) as IptvChannel[];
-  cachedChannels = data.filter((ch) => ch.url && ch.url.length > 0);
+  cachedChannels = data.filter((ch) => ch.url && ch.url.length > 0 && ch.country_code === 'CO');
   return cachedChannels;
 }
 
