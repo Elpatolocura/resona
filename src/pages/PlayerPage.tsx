@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Film, Heart, Music2, Pause, Play, SkipBack, SkipForward, Tv, Disc3, Clock, User, Share2, Flag, X, Check, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Film, Heart, Music2, Pause, Play, SkipBack, SkipForward, Tv, Disc3, Clock, User, Share2, Flag, X, Check, MoreVertical, ListMusic } from 'lucide-react';
 import { usePlayerStore } from '../store/playerStore';
 import { useLibraryStore } from '../store/libraryStore';
 import { useMediaStore } from '../store/mediaStore';
@@ -148,7 +148,7 @@ export default function PlayerPage() {
   };
 
   return (
-    <div className="flex h-full animate-fade-in">
+    <div className="flex h-full animate-fade-in overflow-hidden">
       {/* Left side - Player */}
       <div className="relative flex h-full w-full flex-col overflow-hidden xl:w-1/2" style={{ background: art && !isVideo ? 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(30,10,40,0.9) 40%, rgba(15,5,20,1) 100%)' : 'linear-gradient(180deg, rgba(20,10,30,0.95) 0%, rgba(10,5,15,1) 100%)' }}>
         {art && !isVideo && <div className="pointer-events-none absolute inset-0 opacity-20 blur-[120px]" style={{ backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
@@ -220,6 +220,13 @@ export default function PlayerPage() {
               {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Share2 className="h-3.5 w-3.5" />}
               {copied ? 'Copiado' : 'Compartir'}
             </button>
+            <button onClick={toggleQueue} className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition',
+              showQueue ? 'bg-fuchsia-500/30 text-fuchsia-300' : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white',
+            )}>
+              <ListMusic className="h-3.5 w-3.5" />
+              Cola
+            </button>
             <div className="relative">
               <button onClick={() => setShowOptions(!showOptions)} className="inline-flex items-center justify-center rounded-full bg-white/10 p-1.5 text-white/60 transition hover:bg-white/20 hover:text-white">
                 <MoreVertical className="h-4 w-4" />
@@ -235,6 +242,21 @@ export default function PlayerPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile queue panel */}
+      {showQueue && (
+        <div className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] overflow-hidden border-t border-line bg-surface/95 backdrop-blur-xl xl:hidden">
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <span className="text-sm font-bold text-text">Cola de reproducción</span>
+            <button onClick={toggleQueue} className="rounded-full p-1 text-muted transition hover:bg-surface-2 hover:text-text">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="overflow-y-auto max-h-[calc(70vh-52px)]">
+            <QueuePanel onClose={toggleQueue} />
+          </div>
+        </div>
+      )}
 
       {/* Right side - Queue or Similar tracks */}
       <div className="hidden w-1/2 flex-col border-l border-line bg-surface/30 xl:flex">
