@@ -7,41 +7,56 @@ interface BeforeInstallPromptEvent extends Event {
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e as BeforeInstallPromptEvent;
-});
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e as BeforeInstallPromptEvent;
+  });
+}
+
+function isIOSSafari(): boolean {
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
+  return isIOS && isSafari;
+}
+
+function isStandalone(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true;
+}
 
 export function usePwaInstall() {
   const [canInstall, setCanInstall] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [showIOSHint, setShowIOSHint] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (isStandalone()) {
       setIsInstalled(true);
       return;
     }
 
     if (deferredPrompt) {
       setCanInstall(true);
+      return;
     }
 
-    const handler = () => {
-      setIsInstalled(true);
-      setCanInstall(false);
-    };
-    window.addEventListener('appinstalled', handler);
-    return () => window.removeEventListener('appinstalled', handler);
+    if (isIOSSafari()) {
+      setShowIOSHint(true);
+    }
   }, []);
 
   const install = async () => {
-    if (!deferredPrompt) return false;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    setCanInstall(false);
-    return outcome === 'accepted';
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      setCanInstall(false);
+      return outcome === 'accepted';
+    }
+    return false;
   };
 
-  return { canInstall, isInstalled, install };
+  return { canInstall, isInstalled, showIOSHint, install };
 }

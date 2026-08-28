@@ -49,7 +49,7 @@ export default function MobileNav() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
-  const { canInstall, install } = usePwaInstall();
+  const { canInstall, showIOSHint, install } = usePwaInstall();
 
   const isDisabled = (requires?: 'music' | 'movies' | 'series' | 'anime') => {
     if (!requires) return false;
@@ -149,6 +149,13 @@ export default function MobileNav() {
                 <Download className="h-5 w-5 shrink-0" />
                 Instalar Resona
               </button>
+            </div>
+          )}
+
+          {showIOSHint && !canInstall && (
+            <div className="border-t border-line p-4">
+              <p className="text-xs font-semibold text-fuchsia-300 mb-1">Instalar en iPhone/iPad</p>
+              <p className="text-xs text-muted">Toca el botón <strong>Compartir</strong> (cuadro con flecha) en Safari y selecciona <strong>"Agregar a pantalla de inicio"</strong>.</p>
             </div>
           )}
 
