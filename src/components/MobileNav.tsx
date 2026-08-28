@@ -154,7 +154,7 @@ export default function MobileNav() {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          'fixed bottom-20 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 lg:hidden',
+          'fixed bottom-6 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 lg:hidden',
           open
             ? 'rotate-45 bg-fuchsia-500 text-white shadow-fuchsia-500/40'
             : 'bg-brand text-white shadow-brand/40',
