@@ -30,7 +30,7 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
     >
       <div
         className={cn(
-          'w-full max-w-md animate-rise rounded-3xl border border-line bg-surface p-6 shadow-2xl shadow-black/60',
+          'w-full max-w-sm animate-rise rounded-2xl border border-line bg-surface p-4 shadow-2xl shadow-black/60 sm:max-w-md sm:rounded-3xl sm:p-6',
         )}
         role="dialog"
         aria-modal="true"

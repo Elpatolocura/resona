@@ -56,6 +56,7 @@ export default function PlayerPage() {
   const [reportDetails, setReportDetails] = useState('');
   const [copied, setCopied] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'queue' | 'similar'>('similar');
 
   const currentTrack = currentMedia?.kind === 'music' ? currentMedia.track : null;
   const SIMILAR_PER_PAGE = 10;
@@ -217,9 +218,8 @@ export default function PlayerPage() {
             <div className="text-white/60"><VolumeControl /></div>
           </div>
           <div className="relative flex items-center justify-center gap-3 pt-2">
-            <button onClick={shareTrack} className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/20 hover:text-white">
-              {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Share2 className="h-3.5 w-3.5" />}
-              {copied ? 'Copiado' : 'Compartir'}
+            <button onClick={shareTrack} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white">
+              {copied ? <Check className="h-4 w-4 text-green-400" /> : <Share2 className="h-4 w-4" />}
             </button>
             <button onClick={toggleQueue} className={cn(
               'relative flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs transition',
@@ -229,13 +229,13 @@ export default function PlayerPage() {
               <span className="font-bold">{queue.length}</span>
             </button>
             <div className="relative">
-              <button onClick={() => setShowOptions(!showOptions)} className="inline-flex items-center justify-center rounded-full bg-white/10 p-1.5 text-white/60 transition hover:bg-white/20 hover:text-white">
+              <button onClick={() => setShowOptions(!showOptions)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white">
                 <MoreVertical className="h-4 w-4" />
               </button>
               {showOptions && (
                 <div className="absolute top-full right-0 z-50 mt-2 mr-2 min-w-40 origin-top animate-fade-in rounded-xl border border-white/20 bg-surface-2 p-1 shadow-2xl shadow-black/60">
                   <button onClick={() => { setShowReportModal(true); setShowOptions(false); }} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-text transition hover:bg-surface-3">
-                    <Flag className="h-3.5 w-3.5" /> Denunciar
+                    <Flag className="h-3.5 w-3.5" />
                   </button>
                 </div>
               )}
@@ -248,10 +248,10 @@ export default function PlayerPage() {
       {showQueue && (
         <div className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] overflow-hidden border-t border-line bg-surface/95 backdrop-blur-xl xl:hidden">
           <div className="flex border-b border-line">
-            <button onClick={() => showQueue && toggleQueue()} className={cn('flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-1.5', !showQueue ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
+            <button onClick={() => setMobileTab('similar')} className={cn('flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-1.5', mobileTab === 'similar' ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
               <Music2 className="h-4 w-4" /> Similares
             </button>
-            <button onClick={() => !showQueue && toggleQueue()} className={cn('flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-1.5 relative', showQueue ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
+            <button onClick={() => setMobileTab('queue')} className={cn('flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-1.5 relative', mobileTab === 'queue' ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
               <Disc3 className="h-4 w-4" /> Cola
               <span className="ml-1 rounded-full bg-fuchsia-500/30 px-1.5 text-[10px] font-bold text-fuchsia-300">{queue.length}</span>
             </button>
@@ -260,7 +260,7 @@ export default function PlayerPage() {
             </button>
           </div>
           <div className="overflow-y-auto max-h-[calc(70vh-48px)]">
-            {showQueue ? (
+            {mobileTab === 'queue' ? (
               <QueuePanel onClose={toggleQueue} />
             ) : (
               <div className="p-2">
