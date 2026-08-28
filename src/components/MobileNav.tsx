@@ -16,6 +16,7 @@ import {
   LogOut,
   MessageSquare,
   Download,
+  Share,
 } from 'lucide-react';
 import { useContent } from './ContentProvider';
 import { useAuthStore } from '../store/authStore';
@@ -49,7 +50,8 @@ export default function MobileNav() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
-  const { canInstall, showIOSHint, install } = usePwaInstall();
+  const [showIOSModal, setShowIOSModal] = useState(false);
+  const { canInstall, install } = usePwaInstall();
 
   const isDisabled = (requires?: 'music' | 'movies' | 'series' | 'anime') => {
     if (!requires) return false;
@@ -140,24 +142,22 @@ export default function MobileNav() {
             })}
           </nav>
 
-          {canInstall && (
-            <div className="border-t border-line p-2">
-              <button
-                onClick={() => { install(); setOpen(false); }}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-fuchsia-300 transition hover:bg-brand/15"
-              >
-                <Download className="h-5 w-5 shrink-0" />
-                Instalar Resona
-              </button>
-            </div>
-          )}
-
-          {showIOSHint && !canInstall && (
-            <div className="border-t border-line p-4">
-              <p className="text-xs font-semibold text-fuchsia-300 mb-1">Instalar en iPhone/iPad</p>
-              <p className="text-xs text-muted">Toca el botón <strong>Compartir</strong> (cuadro con flecha) en Safari y selecciona <strong>"Agregar a pantalla de inicio"</strong>.</p>
-            </div>
-          )}
+          <div className="border-t border-line p-2">
+            <button
+              onClick={() => {
+                if (canInstall) {
+                  install();
+                  setOpen(false);
+                } else {
+                  setShowIOSModal(true);
+                }
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-fuchsia-300 transition hover:bg-brand/15"
+            >
+              <Download className="h-5 w-5 shrink-0" />
+              Instalar Resona
+            </button>
+          </div>
 
           {user && (
             <div className="border-t border-line p-2">
@@ -184,6 +184,46 @@ export default function MobileNav() {
       >
         {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
+
+      {showIOSModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm lg:hidden">
+          <div className="w-full max-w-sm rounded-3xl border border-line bg-surface p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-extrabold">Instalar Resona</h2>
+              <button
+                onClick={() => setShowIOSModal(false)}
+                className="rounded-full p-1.5 text-muted transition hover:bg-surface-2 hover:text-text"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 space-y-4 text-sm text-muted">
+              <p className="text-text font-medium">Para instalar en tu iPhone o iPad:</p>
+              <ol className="space-y-3 list-decimal list-inside">
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand/20 text-xs font-bold text-fuchsia-300">1</span>
+                  <span>Toca el botón <strong className="text-text">Compartir</strong> en la barra de Safari (ícono de cuadro con flecha ↑)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand/20 text-xs font-bold text-fuchsia-300">2</span>
+                  <span>Desplaza hacia abajo y selecciona <strong className="text-text">"Agregar a pantalla de inicio"</strong></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand/20 text-xs font-bold text-fuchsia-300">3</span>
+                  <span>Toca <strong className="text-text">"Agregar"</strong> en la esquina superior derecha</span>
+                </li>
+              </ol>
+              <p className="text-xs text-faint text-center pt-2">Resona aparecerá en tu pantalla de inicio como una app nativa.</p>
+            </div>
+            <button
+              onClick={() => setShowIOSModal(false)}
+              className="mt-6 w-full rounded-full bg-brand py-3 text-sm font-bold text-white transition hover:opacity-90"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
