@@ -53,7 +53,7 @@ async function fetchWithRetry(url: string, retries = 3, backoffMs = 1000): Promi
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, {
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(60000),
       });
 
       if (res.status === 429) {
@@ -277,7 +277,13 @@ function matchEpgKey(ch: IptvChannel, epgKeys: string[]): string | undefined {
 }
 
 export async function fetchChannelsWithEpg(): Promise<IptvChannelWithEpg[]> {
-  const [channels, epg] = await Promise.all([fetchIptvChannels(), fetchEpg()]);
+  const channels = await fetchIptvChannels();
+  let epg = new Map<string, EpgProgram[]>();
+  try {
+    epg = await fetchEpg();
+  } catch {
+    // EPG failed, show channels without programs
+  }
   const now = new Date();
   const epgKeys = Array.from(epg.keys());
 
