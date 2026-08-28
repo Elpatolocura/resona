@@ -34,6 +34,168 @@ export const FORUM_CATEGORIES = [
 
 export const INITIAL_POSTS: ForumPost[] = [
   {
+    id: '108',
+    title: 'Actualización v3.2 - TV en Vivo con EPG y PWA',
+    body: `¡Nueva actualización disponible! Estos son los cambios desde la v3.1:
+
+AHORA (v3.2):
+- Guía de programación (EPG) en TV en Vivo
+- Muestra programa actual, siguiente y barra de progreso
+- Datos de iptv-org con decompression gzip
+- Búsqueda de canales por nombre de programa
+- Botón "Instalar Resona" para instalar como PWA
+- Compatible con Android, iOS y escritorio
+- Barra de búsqueda superior removida (usar /search)
+
+PRÓXIMAMENTE:
+• Notificaciones push
+• Modo offline completo
+• Ecualizador visual`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=800&q=80'],
+    comments: [],
+  },
+  {
+    id: '107',
+    title: 'Actualización v3.1 - Anime y TV en Vivo colombiana',
+    body: `¡Nueva actualización disponible! Estos son los cambios desde la v3.0:
+
+AHORA (v3.1):
+- Sección de Anime completa (pipeline de datos, rutas, páginas)
+- Filtro de idioma para anime: Todos / Japonés / Español
+- Búsqueda de anime integrada
+- Reproducción de video para anime con embed providers
+- TV en Vivo con canales colombianos (iptv-org)
+- Selector de categorías para canales
+- Reproductor de video en vivo con controles
+- Mini reproductor draggable en móvil (círculo flotante)
+- Botón de play siempre visible en móvil
+- Barra inferior eliminada en móvil para música
+
+MEJORAS VISUALES:
+- Círculo flotante con animación de spin
+- Anillo de progreso circular SVG
+- Efecto glow en mini reproductor
+- Panel de cola con pestañas en móvil
+
+PRÓXIMAMENTE:
+• Guía EPG para TV en Vivo
+• PWA (instalable)
+• Notificaciones push`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80'],
+    comments: [],
+  },
+  {
+    id: '106',
+    title: 'Actualización v3.0 - Reproductor mejorado y cola de reproducción',
+    body: `¡Nueva actualización disponible! Estos son los cambios desde la v2.8:
+
+AHORA (v3.0):
+- Página del reproductor con layout 50/50
+- Panel de cola de reproducción con gestión completa
+- Pestaña "Similares" y "Cola" en el reproductor
+- Botón de cola con contador de canciones
+- Eliminación individual y vaciar cola completa
+- Navegación arriba/abajo para reorganizar
+- Compartir e informar solo con iconos (sin texto)
+- Botón de tres puntos eliminado del reproductor
+- ConfirmDialog y Modal compactos en móvil
+- Pantalla completa para video sin restricciones
+
+MEJORAS TÉCNICAS:
+- TrackMenu usa createPortal para evitar clipping
+- ImageWithFallback para imágenes de songs/movies
+- Fullscreen player rediseñado con vinyl spin
+- Cola integrada inline en el reproductor
+
+PRÓXIMAMENTE:
+• Anime y TV en Vivo
+• EPG (guía de programación)
+• PWA (instalable)`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80'],
+    comments: [],
+  },
+  {
+    id: '105',
+    title: 'Actualización v2.8 - Registro y preferencias de usuario',
+    body: `¡Nueva actualización disponible! Estos son los cambios desde la v2.7:
+
+AHORA (v2.8):
+- Registro de usuario con pasos múltiples
+- Selección de géneros: música, películas, series, anime
+- Selección de idioma preferido
+- Selección de tema preferido
+- Flujo de recuperación de contraseña
+- Página de login-rediseñada con diseño limpio
+- Cierre de sesión con confirmación
+- Botón de login/logout con info del usuario
+
+MEJORAS DE UX:
+- Login móvil: altura completa sin scroll del body
+- Tarjeta de login con scroll interno
+- Utilidad CSS .no-scroll-mobile
+- Animaciones suaves en transiciones
+
+PRÓXIMAMENTE:
+• Anime y TV en Vivo
+• EPG (guía de programación)
+• PWA (instalable)`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1555421689-d68471e189f2?w=800&q=80'],
+    comments: [],
+  },
+  {
+    id: '104',
+    title: 'Actualización v2.7 - Navegación móvil y mejoras de UI',
+    body: `¡Nueva actualización disponible! Estos son los cambios desde la v2.6:
+
+AHORA (v2.7):
+- Menú móvil rediseñado con botón flotante
+- Botón hamburguesa en esquina inferior derecha
+- Drawer deslizante con opciones de navegación
+- Información del usuario y logout en el drawer
+- Posición del botón ajustada (bottom-6 right-5)
+- ConfirmDialog y Modal compactos en móvil
+- Botones de compartir e informar solo iconos (sin texto)
+- Menú de tres puntos eliminado del reproductor
+
+MEJORAS DE UX:
+- Botón flotante siempre accesible
+- Drawer con animación slide-up
+- Contenido del menú optimizado para móvil
+- Espaciado y tipografía ajustados
+
+PRÓXIMAMENTE:
+• Anime y TV en Vivo
+• EPG (guía de programación)
+• PWA (instalable)`,
+    author: 'Admin',
+    category: 'general',
+    date: 'Ahora mismo',
+    likes: 0,
+    likedByMe: false,
+    images: ['https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80'],
+    comments: [],
+  },
+  {
     id: '103',
     title: 'Actualización v2.6 - Login y configuración completa',
     body: `¡Nueva actualización disponible! Estos son los cambios desde la v2.5:

@@ -17,11 +17,13 @@ import {
   Settings,
   LogIn,
   LogOut,
+  Download,
 } from 'lucide-react';
 import { useLibraryStore } from '../store/libraryStore';
 import { useContent } from './ContentProvider';
 import { useAuthStore } from '../store/authStore';
 import { cn } from '../utils/format';
+import { usePwaInstall } from '../hooks/usePwaInstall';
 import CreatePlaylistModal from './CreatePlaylistModal';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -58,6 +60,7 @@ export default function Sidebar() {
   const { content } = useContent();
   const { user, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
+  const { canInstall, install } = usePwaInstall();
 
   const isDisabled = (requires?: 'music' | 'movies' | 'series' | 'anime') => {
     if (!requires) return false;
@@ -176,7 +179,16 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      <div className="shrink-0 border-t border-line px-4 py-4">
+      <div className="shrink-0 border-t border-line px-4 py-4 space-y-2">
+        {canInstall && (
+          <button
+            onClick={install}
+            className="flex w-full items-center gap-2 rounded-xl bg-brand/15 px-3 py-2 text-sm font-medium text-fuchsia-300 transition hover:bg-brand/25"
+          >
+            <Download className="h-4 w-4" />
+            Instalar Resona
+          </button>
+        )}
         {isAuthenticated ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2 px-1">

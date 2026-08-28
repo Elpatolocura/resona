@@ -15,9 +15,11 @@ import {
   X,
   LogOut,
   MessageSquare,
+  Download,
 } from 'lucide-react';
 import { useContent } from './ContentProvider';
 import { useAuthStore } from '../store/authStore';
+import { usePwaInstall } from '../hooks/usePwaInstall';
 import { cn } from '../utils/format';
 
 interface NavItem {
@@ -47,6 +49,7 @@ export default function MobileNav() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
+  const { canInstall, install } = usePwaInstall();
 
   const isDisabled = (requires?: 'music' | 'movies' | 'series' | 'anime') => {
     if (!requires) return false;
@@ -136,6 +139,18 @@ export default function MobileNav() {
               );
             })}
           </nav>
+
+          {canInstall && (
+            <div className="border-t border-line p-2">
+              <button
+                onClick={() => { install(); setOpen(false); }}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-fuchsia-300 transition hover:bg-brand/15"
+              >
+                <Download className="h-5 w-5 shrink-0" />
+                Instalar Resona
+              </button>
+            </div>
+          )}
 
           {user && (
             <div className="border-t border-line p-2">

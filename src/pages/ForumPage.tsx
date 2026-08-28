@@ -54,6 +54,30 @@ function renderText(text: string) {
   });
 }
 
+function ForumBookmarkButton({ postId }: { postId: string }) {
+  const isInMyList = useLibraryStore((s) => s.myList.some((m) => m.id === `forum:${postId}`));
+  const toggleMyList = useLibraryStore((s) => s.toggleMyList);
+
+  const handleToggle = () => {
+    const post = INITIAL_POSTS.find((p) => p.id === postId) ?? { id: postId, title: '', body: '', author: 'Tú', category: 'general', date: 'Ahora mismo', likes: 0, likedByMe: false, comments: [] };
+    toggleMyList(postToMedia(post));
+    toast(isInMyList ? 'Hilo quitado de Mi Lista' : 'Hilo guardado en Mi Lista', isInMyList ? 'info' : 'success');
+  };
+
+  return (
+    <button
+      onClick={handleToggle}
+      className={cn(
+        'inline-flex items-center gap-1.5 text-xs font-medium transition-colors',
+        isInMyList ? 'text-fuchsia-300' : 'text-faint hover:text-fuchsia-300',
+      )}
+    >
+      <Bookmark className={cn('h-3.5 w-3.5', isInMyList && 'fill-current')} />
+      {isInMyList ? 'En Mi Lista' : 'Mi Lista'}
+    </button>
+  );
+}
+
 function CommentItem({
   comment,
   postId,
@@ -511,23 +535,7 @@ export default function ForumPage() {
                         <MessageSquare className="h-3.5 w-3.5" />
                         {totalComments} {totalComments === 1 ? 'comentario' : 'comentarios'}
                       </button>
-                      <button
-                        onClick={() => {
-                          const isSaved = useLibraryStore.getState().isInMyList(`forum:${post.id}`);
-                          useLibraryStore.getState().toggleMyList(postToMedia(post));
-                          toast(
-                            isSaved ? 'Hilo quitado de Mi Lista' : 'Hilo guardado en Mi Lista',
-                            isSaved ? 'info' : 'success',
-                          );
-                        }}
-                        className={cn(
-                          'inline-flex items-center gap-1.5 text-xs font-medium transition-colors',
-                          useLibraryStore.getState().isInMyList(`forum:${post.id}`) ? 'text-fuchsia-300' : 'text-faint hover:text-fuchsia-300',
-                        )}
-                      >
-                        <Bookmark className={cn('h-3.5 w-3.5', useLibraryStore.getState().isInMyList(`forum:${post.id}`) && 'fill-current')} />
-                        {useLibraryStore.getState().isInMyList(`forum:${post.id}`) ? 'En Mi Lista' : 'Mi Lista'}
-                      </button>
+                      <ForumBookmarkButton postId={post.id} />
                       <button
                         onClick={() => sharePost(post)}
                         className="inline-flex items-center gap-1.5 text-xs font-medium text-faint transition-colors hover:text-fuchsia-300"
