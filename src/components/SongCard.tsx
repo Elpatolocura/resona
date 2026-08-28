@@ -37,7 +37,7 @@ export default function SongCard({ track, onPlay, className }: SongCardProps) {
             isCurrent && 'bg-black/40',
           )}
         />
-        <div className="absolute inset-0 flex items-center justify-center sm:opacity-0 sm:transition-opacity sm:duration-300 sm:group-hover:opacity-100">
+        <div className="absolute bottom-2 right-2 sm:opacity-0 sm:transition-opacity sm:duration-300 sm:group-hover:opacity-100">
           {isPlayable(track) && (
             <PlayButton
               track={track}
