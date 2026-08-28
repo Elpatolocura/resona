@@ -150,7 +150,7 @@ export default function PlayerPage() {
   return (
     <div className="flex h-full animate-fade-in">
       {/* Left side - Player */}
-      <div className="relative flex h-full w-1/2 flex-col overflow-hidden" style={{ background: art && !isVideo ? 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(30,10,40,0.9) 40%, rgba(15,5,20,1) 100%)' : 'linear-gradient(180deg, rgba(20,10,30,0.95) 0%, rgba(10,5,15,1) 100%)' }}>
+      <div className="relative flex h-full w-full flex-col overflow-hidden xl:w-1/2" style={{ background: art && !isVideo ? 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(30,10,40,0.9) 40%, rgba(15,5,20,1) 100%)' : 'linear-gradient(180deg, rgba(20,10,30,0.95) 0%, rgba(10,5,15,1) 100%)' }}>
         {art && !isVideo && <div className="pointer-events-none absolute inset-0 opacity-20 blur-[120px]" style={{ backgroundImage: `url(${art})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
         
         {/* Top bar - fixed */}
