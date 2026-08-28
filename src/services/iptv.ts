@@ -89,8 +89,35 @@ async function fetchJson<T>(url: string, retries?: number): Promise<T> {
 async function fetchXml(url: string): Promise<string> {
   const res = await fetchWithRetry(url, 2);
   const buffer = await res.arrayBuffer();
-  const decoder = new TextDecoder('utf-8');
-  return decoder.decode(buffer);
+
+  const bytes = new Uint8Array(buffer);
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    try {
+      const ds = new DecompressionStream('gzip');
+      const writer = ds.writable.getWriter();
+      writer.write(bytes);
+      writer.close();
+      const reader = ds.readable.getReader();
+      const chunks: Uint8Array[] = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      const totalLen = chunks.reduce((s, c) => s + c.length, 0);
+      const merged = new Uint8Array(totalLen);
+      let offset = 0;
+      for (const c of chunks) {
+        merged.set(c, offset);
+        offset += c.length;
+      }
+      return new TextDecoder('utf-8').decode(merged);
+    } catch {
+      return new TextDecoder('utf-8').decode(bytes);
+    }
+  }
+
+  return new TextDecoder('utf-8').decode(bytes);
 }
 
 function parseXmlPrograms(xml: string, channelId: string): EpgProgram[] {
@@ -222,12 +249,41 @@ export async function fetchEpg(): Promise<Map<string, EpgProgram[]>> {
   }
 }
 
+function normalizeId(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function matchEpgKey(ch: IptvChannel, epgKeys: string[]): string | undefined {
+  const candidates = [ch.tvg_id, ch.id, ch.tvg_name, ch.name, ...(ch.alt_names ?? [])]
+    .filter(Boolean) as string[];
+
+  for (const c of candidates) {
+    const norm = normalizeId(c);
+    for (const key of epgKeys) {
+      if (normalizeId(key) === norm) return key;
+    }
+  }
+
+  for (const c of candidates) {
+    const lower = c.toLowerCase();
+    for (const key of epgKeys) {
+      if (key.toLowerCase().includes(lower) || lower.includes(key.toLowerCase())) {
+        return key;
+      }
+    }
+  }
+
+  return undefined;
+}
+
 export async function fetchChannelsWithEpg(): Promise<IptvChannelWithEpg[]> {
   const [channels, epg] = await Promise.all([fetchIptvChannels(), fetchEpg()]);
   const now = new Date();
+  const epgKeys = Array.from(epg.keys());
 
   return channels.map((ch) => {
-    const channelEpg = epg.get(ch.tvg_id ?? ch.id) ?? [];
+    const matchedKey = matchEpgKey(ch, epgKeys);
+    const channelEpg = matchedKey ? (epg.get(matchedKey) ?? []) : [];
     const currentProgram = channelEpg.find(
       (p) => p.start <= now && p.end > now,
     );
