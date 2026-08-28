@@ -33,11 +33,11 @@ export default function SongCard({ track, onPlay, className }: SongCardProps) {
         />
         <div
           className={cn(
-            'absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100',
-            isCurrent && 'opacity-100',
+            'absolute inset-0 bg-black/20 transition-opacity duration-300 group-hover:bg-black/40',
+            isCurrent && 'bg-black/40',
           )}
         />
-        <div className="absolute bottom-2 right-2 translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="absolute inset-0 flex items-center justify-center sm:opacity-0 sm:transition-opacity sm:duration-300 sm:group-hover:opacity-100">
           {isPlayable(track) && (
             <PlayButton
               track={track}

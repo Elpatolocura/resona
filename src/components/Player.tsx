@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Film, Heart, ListMusic, Music2, Pause, Play, SkipBack, SkipForward, Tv, X, Volume2, Maximize2 } from 'lucide-react';
 import type { Media } from '../types';
@@ -28,7 +28,6 @@ export default function Player() {
   const prev = usePlayerStore((s) => s.prev);
   const seek = usePlayerStore((s) => s.seek);
   const toggleQueue = usePlayerStore((s) => s.toggleQueue);
-  const [showMobileVolume, setShowMobileVolume] = useState(false);
 
   const favorites = useLibraryStore((s) => s.favorites);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
@@ -46,6 +45,46 @@ export default function Player() {
       ? favorites.some((f) => f.id === currentMedia.track.id)
       : isVodFav
     : false;
+
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [initialized, setInitialized] = useState(false);
+  const dragRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const start = useRef({ x: 0, y: 0, px: 0, py: 0 });
+
+  const initPos = useCallback(() => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    setPos({ x: w - 80, y: h - 200 });
+    setInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    initPos();
+    window.addEventListener('resize', initPos);
+    return () => window.removeEventListener('resize', initPos);
+  }, [initPos]);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    dragging.current = true;
+    start.current = { x: e.clientX, y: e.clientY, px: pos.x, py: pos.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [pos]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const dx = e.clientX - start.current.x;
+    const dy = e.clientY - start.current.y;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const newX = Math.max(0, Math.min(w - 64, start.current.px + dx));
+    const newY = Math.max(0, Math.min(h - 64, start.current.py + dy));
+    setPos({ x: newX, y: newY });
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false;
+  }, []);
 
   useEffect(() => {
     if (!currentMedia) return;
@@ -87,154 +126,149 @@ export default function Player() {
 
   const subtitle = currentMedia.kind === 'music' ? currentMedia.subtitle : mediaSubtitle(currentMedia);
 
-  return (
-    <div className="fixed inset-x-0 bottom-16 z-40 border-t border-line bg-surface/95 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl lg:bottom-0 lg:left-64">
-      {!isVideo && (
-        <div className="px-3 pt-2 lg:hidden">
-          <div className="flex items-center gap-2">
-            <span className="w-8 shrink-0 text-right text-[10px] tabular-nums text-faint">
-              {formatTime(progress)}
-            </span>
-            <ProgressBar value={progress} max={duration} onChange={seek} />
-            <span className="w-8 shrink-0 text-[10px] tabular-nums text-faint">
-              {formatTime(duration)}
-            </span>
+  if (!isVideo && art) {
+    return (
+      <>
+        <div
+          ref={dragRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onClick={() => { if (!dragging.current) navigate('/player'); }}
+          className={cn(
+            'fixed z-50 h-16 w-16 rounded-full shadow-2xl shadow-black/60 touch-none select-none lg:hidden',
+            isPlaying && 'shadow-[0_0_20px_rgba(139,92,246,0.5),0_0_40px_rgba(236,72,153,0.3)]',
+          )}
+          style={{ left: pos.x, top: pos.y, opacity: initialized ? 1 : 0 }}
+        >
+          <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="30" fill="none" stroke="rgba(139,92,246,0.2)" strokeWidth="2.5" />
+            <circle
+              cx="32" cy="32" r="30" fill="none" stroke="url(#mp-gradient)" strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 30}`}
+              strokeDashoffset={`${2 * Math.PI * 30 * (1 - (duration > 0 ? progress / duration : 0))}`}
+              className="transition-[stroke-dashoffset] duration-300"
+            />
+            <defs>
+              <linearGradient id="mp-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#8b5cf6" />
+                <stop offset="100%" stopColor="#ec4899" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className={cn(
+            'absolute inset-[3px] overflow-hidden rounded-full',
+            isPlaying && 'animate-[spin_4s_linear_infinite]',
+          )} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}>
+            <img src={art} alt="" className="h-full w-full object-cover" />
           </div>
         </div>
-      )}
 
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-3 sm:gap-4 lg:h-20 lg:px-6">
-        {!isVideo && art ? (
-          <div
-            onClick={() => navigate('/player')}
-            className="relative h-11 w-11 shrink-0 cursor-pointer lg:h-14 lg:w-14"
-          >
-            <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 44 44">
-              <circle cx="22" cy="22" r="20" fill="none" stroke="rgba(139,92,246,0.15)" strokeWidth="2.5" />
-              <circle
-                cx="22" cy="22" r="20" fill="none" stroke="url(#progress-gradient)" strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 20}`}
-                strokeDashoffset={`${2 * Math.PI * 20 * (1 - (duration > 0 ? progress / duration : 0))}`}
-                className="transition-[stroke-dashoffset] duration-300"
-              />
-              <defs>
-                <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#ec4899" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className={cn(
-              'absolute inset-[3px] overflow-hidden rounded-full',
-              isPlaying && 'animate-[spin_4s_linear_infinite]',
-            )} style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}>
-              <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl lg:bottom-0 lg:left-64">
+          <div className="px-3 pt-2 lg:hidden">
+            <div className="flex items-center gap-2">
+              <span className="w-8 shrink-0 text-right text-[10px] tabular-nums text-faint">
+                {formatTime(progress)}
+              </span>
+              <ProgressBar value={progress} max={duration} onChange={seek} />
+              <span className="w-8 shrink-0 text-[10px] tabular-nums text-faint">
+                {formatTime(duration)}
+              </span>
             </div>
-            {isPlaying && (
-              <div className="absolute inset-[3px] rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5),0_0_30px_rgba(236,72,153,0.3)]" />
-            )}
           </div>
-        ) : (
-          <div
-            onClick={() => !isVideo && navigate('/player')}
-            className={cn(
-              'relative h-11 w-11 shrink-0 overflow-hidden rounded-full shadow-lg lg:h-14 lg:w-14',
-              !isVideo && 'cursor-pointer transition hover:ring-2 hover:ring-fuchsia-400/50',
-            )}
-          >
-            {art ? (
-              <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-brand/25">
-                {isVideo ? (
-                  currentMedia.kind === 'movie' ? (
-                    <Film className="h-5 w-5 text-fuchsia-300/70" />
-                  ) : (
-                    <Tv className="h-5 w-5 text-fuchsia-300/70" />
-                  )
-                ) : (
-                  <Music2 className="h-5 w-5 text-fuchsia-300/70" />
+
+          <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-3 sm:gap-4 lg:h-20 lg:px-6">
+            <div className="min-w-0 flex-1 overflow-hidden lg:max-w-56">
+              <p className="truncate text-sm font-semibold text-text">{currentMedia.title}</p>
+              <p className="truncate text-xs text-muted">{subtitle}</p>
+            </div>
+
+            <div className="ml-auto hidden items-center gap-1 lg:flex">
+              <VolumeControl />
+              <button
+                onClick={toggleQueue}
+                aria-label="Cola de reproducción"
+                className={cn(
+                  'rounded-full p-2 transition hover:bg-surface-2',
+                  showQueue ? 'text-fuchsia-300' : 'text-muted hover:text-text',
                 )}
-              </div>
-            )}
+              >
+                <ListMusic className="h-4.5 w-4.5" />
+              </button>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1 lg:hidden">
+              <button
+                onClick={prev}
+                aria-label="Anterior"
+                className="rounded-full p-1.5 text-text transition hover:text-fuchsia-300"
+              >
+                <SkipBack className="h-4.5 w-4.5 fill-current" />
+              </button>
+              <button
+                onClick={togglePlay}
+                aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-text text-bg transition-all hover:scale-105 active:scale-95"
+              >
+                {isLoading ? (
+                  <div className="h-4.5 w-4.5 animate-spin rounded-full border-2 border-bg border-t-transparent" />
+                ) : isPlaying ? (
+                  <Pause className="h-4.5 w-4.5 fill-current" />
+                ) : (
+                  <Play className="ml-0.5 h-4.5 w-4.5 fill-current" />
+                )}
+              </button>
+              <button
+                onClick={next}
+                aria-label="Siguiente"
+                className="rounded-full p-1.5 text-text transition hover:text-fuchsia-300"
+              >
+                <SkipForward className="h-4.5 w-4.5 fill-current" />
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className="fixed inset-x-0 bottom-16 z-40 border-t border-line bg-surface/95 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl lg:bottom-0 lg:left-64">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-3 sm:gap-4 lg:h-20 lg:px-6">
+        <div
+          onClick={() => goToWatch()}
+          className={cn(
+            'relative h-11 w-11 shrink-0 overflow-hidden rounded-full shadow-lg lg:h-14 lg:w-14',
+            'cursor-pointer transition hover:ring-2 hover:ring-fuchsia-400/50',
+          )}
+        >
+          {art ? (
+            <img src={art} alt={currentMedia.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-brand/25">
+              {currentMedia.kind === 'movie' ? (
+                <Film className="h-5 w-5 text-fuchsia-300/70" />
+              ) : (
+                <Tv className="h-5 w-5 text-fuchsia-300/70" />
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="min-w-0 flex-1 overflow-hidden lg:max-w-56">
           <p className="truncate text-sm font-semibold text-text">{currentMedia.title}</p>
           <p className="truncate text-xs text-muted">{subtitle}</p>
         </div>
 
-        {!isVideo && (
+        <div className="mx-auto hidden w-full max-w-2xl items-center justify-center lg:flex">
           <button
-            onClick={() => navigate('/player')}
-            aria-label="Expandir reproductor"
-            className="shrink-0 rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-fuchsia-300"
+            onClick={goToWatch}
+            className="inline-flex items-center gap-2 rounded-full border border-line bg-bg/40 px-5 py-2 text-sm font-bold text-fuchsia-300 backdrop-blur transition hover:border-fuchsia-400/50 hover:bg-brand/10"
           >
-            <Maximize2 className="h-4 w-4" />
+            <Play className="h-4 w-4 fill-current" /> Ver en reproductor
           </button>
-        )}
-
-        <button
-          onClick={handleFavorite}
-          aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-          className="shrink-0 rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-text"
-        >
-          <Heart className={cn('h-4.5 w-4.5', isFav && 'fill-accent-2 text-accent-2')} />
-        </button>
-
-        {isVideo ? (
-          <div className="mx-auto hidden w-full max-w-2xl items-center justify-center lg:flex">
-            <button
-              onClick={goToWatch}
-              className="inline-flex items-center gap-2 rounded-full border border-line bg-bg/40 px-5 py-2 text-sm font-bold text-fuchsia-300 backdrop-blur transition hover:border-fuchsia-400/50 hover:bg-brand/10"
-            >
-              <Play className="h-4 w-4 fill-current" /> Ver en reproductor
-            </button>
-          </div>
-        ) : (
-          <div className="mx-auto hidden w-full max-w-2xl flex-col items-center gap-1.5 lg:flex">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={prev}
-                aria-label="Anterior"
-                className="rounded-full p-2 text-text transition hover:text-fuchsia-300"
-              >
-                <SkipBack className="h-5 w-5 fill-current" />
-              </button>
-              <button
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-text text-bg transition-all hover:scale-105 active:scale-95"
-              >
-                {isLoading ? (
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-bg border-t-transparent" />
-                ) : isPlaying ? (
-                  <Pause className="h-5 w-5 fill-current" />
-                ) : (
-                  <Play className="ml-0.5 h-5 w-5 fill-current" />
-                )}
-              </button>
-              <button
-                onClick={next}
-                aria-label="Siguiente"
-                className="rounded-full p-2 text-text transition hover:text-fuchsia-300"
-              >
-                <SkipForward className="h-5 w-5 fill-current" />
-              </button>
-            </div>
-            <div className="flex w-full items-center gap-2.5">
-              <span className="w-9 shrink-0 text-right text-[11px] tabular-nums text-faint">
-                {formatTime(progress)}
-              </span>
-              <ProgressBar value={progress} max={duration} onChange={seek} />
-              <span className="w-9 shrink-0 text-[11px] tabular-nums text-faint">
-                {formatTime(duration)}
-              </span>
-            </div>
-          </div>
-        )}
+        </div>
 
         <div className="ml-auto hidden items-center gap-1 lg:flex">
           <VolumeControl />
@@ -258,29 +292,19 @@ export default function Player() {
           >
             <SkipBack className="h-4.5 w-4.5 fill-current" />
           </button>
-          {isVideo ? (
-            <button
-              onClick={goToWatch}
-              aria-label="Abrir reproductor"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white shadow-lg shadow-fuchsia-500/40 transition hover:scale-105 active:scale-95"
-            >
+          <button
+            onClick={togglePlay}
+            aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-text text-bg transition-all hover:scale-105 active:scale-95"
+          >
+            {isLoading ? (
+              <div className="h-4.5 w-4.5 animate-spin rounded-full border-2 border-bg border-t-transparent" />
+            ) : isPlaying ? (
+              <Pause className="h-4.5 w-4.5 fill-current" />
+            ) : (
               <Play className="ml-0.5 h-4.5 w-4.5 fill-current" />
-            </button>
-          ) : (
-            <button
-              onClick={togglePlay}
-              aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-text text-bg transition-all hover:scale-105 active:scale-95"
-            >
-              {isLoading ? (
-                <div className="h-4.5 w-4.5 animate-spin rounded-full border-2 border-bg border-t-transparent" />
-              ) : isPlaying ? (
-                <Pause className="h-4.5 w-4.5 fill-current" />
-              ) : (
-                <Play className="ml-0.5 h-4.5 w-4.5 fill-current" />
-              )}
-            </button>
-          )}
+            )}
+          </button>
           <button
             onClick={next}
             aria-label="Siguiente"
@@ -288,44 +312,10 @@ export default function Player() {
           >
             <SkipForward className="h-4.5 w-4.5 fill-current" />
           </button>
-          <div className="relative">
-            <button
-              onClick={() => setShowMobileVolume(!showMobileVolume)}
-              aria-label="Volumen"
-              className="rounded-full p-1.5 text-text transition hover:text-fuchsia-300"
-            >
-              <Volume2 className="h-4.5 w-4.5" />
-            </button>
-            {showMobileVolume && (
-              <div className="absolute bottom-full right-0 mb-2 rounded-2xl border border-line bg-surface/95 p-3 backdrop-blur-xl shadow-xl">
-                <VolumeControl />
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
       {showQueue && <QueuePanel />}
-
-      {!isVideo && queue.length > 0 && (
-        <button
-          onClick={toggleQueue}
-          aria-label="Cola de reproducción"
-          className={cn(
-            'fixed bottom-24 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-xl transition-all hover:scale-110 lg:hidden',
-            showQueue
-              ? 'bg-fuchsia-500 text-white shadow-fuchsia-500/40'
-              : 'bg-surface-2 text-muted border border-line hover:text-fuchsia-300',
-          )}
-        >
-          <ListMusic className="h-5 w-5" />
-          {queue.length > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-fuchsia-500 px-1 text-[10px] font-bold text-white">
-              {queue.length}
-            </span>
-          )}
-        </button>
-      )}
     </div>
   );
 }
