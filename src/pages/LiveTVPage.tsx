@@ -1,27 +1,50 @@
 import { useState, useEffect, useRef } from 'react';
-import { Radio, Search, Play, Pause, Volume2, VolumeX, Maximize, Loader2, AlertCircle } from 'lucide-react';
-import { fetchIptvChannels, filterChannels, IPTV_CATEGORIES, type IptvChannel, type IptvCategory } from '../services/iptv';
+import { Radio, Search, Play, Pause, Volume2, VolumeX, Maximize, Loader2, AlertCircle, Clock } from 'lucide-react';
+import { fetchChannelsWithEpg, filterChannels, IPTV_CATEGORIES, getProgramProgress, formatEpgTime, type IptvChannelWithEpg, type IptvCategory } from '../services/iptv';
 import { cn } from '../utils/format';
 
 export default function LiveTVPage() {
-  const [channels, setChannels] = useState<IptvChannel[]>([]);
+  const [channels, setChannels] = useState<IptvChannelWithEpg[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<IptvChannel | null>(null);
+  const [selected, setSelected] = useState<IptvChannelWithEpg | null>(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<IptvCategory>('All');
   const [muted, setMuted] = useState(false);
   const [playing, setPlaying] = useState(true);
+  const [epgNow, setEpgNow] = useState<Map<string, { current: typeof selected extends infer T ? T extends { currentProgram: infer P } ? P : never : never; next: typeof selected extends infer T ? T extends { nextProgram: infer P } ? P : never : never }>>(new Map());
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    fetchIptvChannels()
+    fetchChannelsWithEpg()
       .then((data) => {
         setChannels(data);
         if (data.length > 0) setSelected(data[0]);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setChannels((prev) =>
+        prev.map((ch) => {
+          const now = new Date();
+          const currentProgram = ch.currentProgram;
+          const nextProgram = ch.nextProgram;
+
+          if (currentProgram && now >= currentProgram.end) {
+            return {
+              ...ch,
+              currentProgram: nextProgram,
+              nextProgram: undefined,
+            };
+          }
+          return ch;
+        })
+      );
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -129,6 +152,31 @@ export default function LiveTVPage() {
                       <Maximize className="h-5 w-5" />
                     </button>
                   </div>
+
+                  {/* EPG Info */}
+                  {selected.currentProgram && (
+                    <div className="mt-3 rounded-xl bg-black/50 p-3 backdrop-blur">
+                      <div className="flex items-center gap-2 text-xs text-white/60">
+                        <Clock className="h-3 w-3" />
+                        <span>{formatEpgTime(selected.currentProgram.start)} - {formatEpgTime(selected.currentProgram.end)}</span>
+                      </div>
+                      <p className="mt-1 text-sm font-semibold text-white">{selected.currentProgram.title}</p>
+                      {selected.currentProgram.description && (
+                        <p className="mt-1 text-xs text-white/70 line-clamp-2">{selected.currentProgram.description}</p>
+                      )}
+                      <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/20">
+                        <div
+                          className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500 transition-all duration-300"
+                          style={{ width: `${getProgramProgress(selected.currentProgram)}%` }}
+                        />
+                      </div>
+                      {selected.nextProgram && (
+                        <p className="mt-2 text-[11px] text-white/50">
+                          Siguiente: {selected.nextProgram.title} ({formatEpgTime(selected.nextProgram.start)})
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -206,10 +254,15 @@ export default function LiveTVPage() {
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-text">{ch.name}</p>
-                      <p className="truncate text-xs text-muted">
-                        {ch.country}
-                        {ch.categories.length > 0 && ` · ${ch.categories.slice(0, 2).join(', ')}`}
-                      </p>
+                      {ch.currentProgram ? (
+                        <p className="truncate text-xs text-fuchsia-300/80">
+                          {ch.currentProgram.title}
+                        </p>
+                      ) : (
+                        <p className="truncate text-xs text-muted">
+                          {ch.categories.slice(0, 2).join(', ')}
+                        </p>
+                      )}
                     </div>
                     {selected?.id === ch.id && (
                       <div className="flex h-6 w-6 shrink-0 items-center justify-center">
