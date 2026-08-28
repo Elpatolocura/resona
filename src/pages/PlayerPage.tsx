@@ -33,6 +33,7 @@ export default function PlayerPage() {
   const isLoading = usePlayerStore((s) => s.isLoading);
   const progress = usePlayerStore((s) => s.progress);
   const duration = usePlayerStore((s) => s.duration);
+  const queue = usePlayerStore((s) => s.queue);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
   const next = usePlayerStore((s) => s.next);
   const prev = usePlayerStore((s) => s.prev);
@@ -221,11 +222,11 @@ export default function PlayerPage() {
               {copied ? 'Copiado' : 'Compartir'}
             </button>
             <button onClick={toggleQueue} className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition',
+              'relative flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-xs transition',
               showQueue ? 'bg-fuchsia-500/30 text-fuchsia-300' : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white',
             )}>
               <ListMusic className="h-3.5 w-3.5" />
-              Cola
+              <span className="font-bold">{queue.length}</span>
             </button>
             <div className="relative">
               <button onClick={() => setShowOptions(!showOptions)} className="inline-flex items-center justify-center rounded-full bg-white/10 p-1.5 text-white/60 transition hover:bg-white/20 hover:text-white">
@@ -246,14 +247,57 @@ export default function PlayerPage() {
       {/* Mobile queue panel */}
       {showQueue && (
         <div className="fixed inset-x-0 bottom-0 z-50 max-h-[70vh] overflow-hidden border-t border-line bg-surface/95 backdrop-blur-xl xl:hidden">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <span className="text-sm font-bold text-text">Cola de reproducción</span>
-            <button onClick={toggleQueue} className="rounded-full p-1 text-muted transition hover:bg-surface-2 hover:text-text">
+          <div className="flex border-b border-line">
+            <button onClick={() => showQueue && toggleQueue()} className={cn('flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-1.5', !showQueue ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
+              <Music2 className="h-4 w-4" /> Similares
+            </button>
+            <button onClick={() => !showQueue && toggleQueue()} className={cn('flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-1.5 relative', showQueue ? 'text-fuchsia-300 border-b-2 border-fuchsia-400' : 'text-muted hover:text-text')}>
+              <Disc3 className="h-4 w-4" /> Cola
+              <span className="ml-1 rounded-full bg-fuchsia-500/30 px-1.5 text-[10px] font-bold text-fuchsia-300">{queue.length}</span>
+            </button>
+            <button onClick={toggleQueue} className="absolute right-2 top-2 rounded-full p-1 text-muted transition hover:bg-surface-2 hover:text-text">
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="overflow-y-auto max-h-[calc(70vh-52px)]">
-            <QueuePanel onClose={toggleQueue} />
+          <div className="overflow-y-auto max-h-[calc(70vh-48px)]">
+            {showQueue ? (
+              <QueuePanel onClose={toggleQueue} />
+            ) : (
+              <div className="p-2">
+                <div className="flex gap-2 p-2 pb-1">
+                  {FILTERS.map(({ id, label, icon: Icon }) => (
+                    <button key={id} onClick={() => setActiveFilter(id)} className={cn('inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all', activeFilter === id ? 'border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300' : 'border-line text-muted hover:border-fuchsia-400/30 hover:text-text')}>
+                      <Icon className="h-3 w-3" /> {label}
+                    </button>
+                  ))}
+                </div>
+                {loadingSimilar ? (
+                  <div className="space-y-2 p-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="flex items-center gap-3 rounded-xl p-2"><div className="h-10 w-10 animate-pulse rounded-lg bg-surface-2" /><div className="flex-1 space-y-2"><div className="h-3 w-3/4 animate-pulse rounded bg-surface-2" /><div className="h-2.5 w-1/2 animate-pulse rounded bg-surface-2" /></div></div>)}</div>
+                ) : similarTracks.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-6 text-center"><Music2 className="h-8 w-8 text-fuchsia-300/30" /><p className="mt-2 text-xs text-muted">No se encontraron canciones</p></div>
+                ) : (
+                  <div className="space-y-1">
+                    {paginatedSimilar.map((track) => {
+                      const trackArt = imageUrl(track.artwork, '150x150');
+                      const isCurrentTrack = currentTrack?.id === track.id;
+                      return (
+                        <div key={track.id} onClick={() => playTrack(track)} className={cn('group flex items-center gap-3 rounded-xl p-2 transition cursor-pointer', isCurrentTrack ? 'bg-fuchsia-500/15 border border-fuchsia-400/30' : 'hover:bg-surface-2 border border-transparent')}>
+                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                            {trackArt ? <img src={trackArt} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center bg-surface-3"><Music2 className="h-4 w-4 text-fuchsia-300/50" /></div>}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100"><Play className="h-4 w-4 fill-white text-white" /></div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={cn('truncate text-xs font-medium', isCurrentTrack ? 'text-fuchsia-300' : 'text-text')}>{track.title}</p>
+                            <p className="truncate text-[11px] text-muted">{track.user.name}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {totalSimilarPages > 1 && <div className="pt-2"><Pagination currentPage={similarPage} totalPages={totalSimilarPages} onPageChange={setSimilarPage} /></div>}
+              </div>
+            )}
           </div>
         </div>
       )}
