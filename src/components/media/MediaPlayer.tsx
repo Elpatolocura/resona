@@ -91,7 +91,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
           </button>
         </div>
       ) : (
-        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-line bg-black shadow-2xl shadow-black/50">
+        <div className="relative aspect-video w-full rounded-2xl border border-line bg-black shadow-2xl shadow-black/50">
           {!loaded && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
               <Loader2 className="h-8 w-8 animate-spin text-fuchsia-300" />
