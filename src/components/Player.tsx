@@ -165,26 +165,14 @@ export default function Player() {
           </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 shadow-[0_-8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl lg:bottom-0 lg:left-64">
-          <div className="px-3 pt-2 lg:hidden">
-            <div className="flex items-center gap-2">
-              <span className="w-8 shrink-0 text-right text-[10px] tabular-nums text-faint">
-                {formatTime(progress)}
-              </span>
-              <ProgressBar value={progress} max={duration} onChange={seek} />
-              <span className="w-8 shrink-0 text-[10px] tabular-nums text-faint">
-                {formatTime(duration)}
-              </span>
-            </div>
-          </div>
-
-          <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-3 sm:gap-4 lg:h-20 lg:px-6">
-            <div className="min-w-0 flex-1 overflow-hidden lg:max-w-56">
+        <div className="hidden lg:block lg:bottom-0 lg:left-64 lg:fixed lg:inset-x-0 lg:z-40 lg:border-t lg:border-line lg:bg-surface/95 lg:shadow-[0_-8px_30px_rgba(0,0,0,0.4)] lg:backdrop-blur-xl">
+          <div className="mx-auto flex h-20 max-w-7xl items-center gap-3 px-6">
+            <div className="min-w-0 flex-1 max-w-56">
               <p className="truncate text-sm font-semibold text-text">{currentMedia.title}</p>
               <p className="truncate text-xs text-muted">{subtitle}</p>
             </div>
 
-            <div className="ml-auto hidden items-center gap-1 lg:flex">
+            <div className="ml-auto flex items-center gap-1">
               <VolumeControl />
               <button
                 onClick={toggleQueue}
@@ -195,36 +183,6 @@ export default function Player() {
                 )}
               >
                 <ListMusic className="h-4.5 w-4.5" />
-              </button>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1 lg:hidden">
-              <button
-                onClick={prev}
-                aria-label="Anterior"
-                className="rounded-full p-1.5 text-text transition hover:text-fuchsia-300"
-              >
-                <SkipBack className="h-4.5 w-4.5 fill-current" />
-              </button>
-              <button
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-text text-bg transition-all hover:scale-105 active:scale-95"
-              >
-                {isLoading ? (
-                  <div className="h-4.5 w-4.5 animate-spin rounded-full border-2 border-bg border-t-transparent" />
-                ) : isPlaying ? (
-                  <Pause className="h-4.5 w-4.5 fill-current" />
-                ) : (
-                  <Play className="ml-0.5 h-4.5 w-4.5 fill-current" />
-                )}
-              </button>
-              <button
-                onClick={next}
-                aria-label="Siguiente"
-                className="rounded-full p-1.5 text-text transition hover:text-fuchsia-300"
-              >
-                <SkipForward className="h-4.5 w-4.5 fill-current" />
               </button>
             </div>
           </div>
