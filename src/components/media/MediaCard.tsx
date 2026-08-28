@@ -36,7 +36,7 @@ export default function MediaCard({ media, className, onRemove }: MediaCardProps
             fallbackType={media.kind === 'movie' ? 'movie' : media.kind === 'anime' ? 'anime' : 'tv'}
           />
 
-          <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <div className="absolute inset-0 bg-black/20 transition-opacity duration-300 group-hover:bg-black/40" />
 
           <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             <span className="rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur">
@@ -95,7 +95,7 @@ export default function MediaCard({ media, className, onRemove }: MediaCardProps
             </div>
           )}
 
-          <div className="absolute bottom-2 right-2 translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          <div className="absolute inset-0 flex items-center justify-center">
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -103,7 +103,7 @@ export default function MediaCard({ media, className, onRemove }: MediaCardProps
                 navigate(`/watch/${media.kind}/${media.tmdbId}`);
               }}
               aria-label={`Ver ${media.title}`}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white shadow-xl shadow-fuchsia-500/40 transition hover:scale-105 active:scale-95"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/90 text-white shadow-xl shadow-fuchsia-500/40 backdrop-blur transition-all duration-300 hover:scale-110 hover:bg-brand active:scale-95 group-hover:opacity-100 sm:opacity-0 sm:scale-75"
             >
               <Play className="ml-0.5 h-5 w-5 fill-current" />
             </button>
