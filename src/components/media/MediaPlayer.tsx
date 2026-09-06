@@ -36,7 +36,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
       setFs(false);
     } else {
       const el = document.documentElement;
-      (el.requestFullscreen?.() || el.webkitRequestFullscreen?.()).catch(() => {});
+      (el.requestFullscreen?.() || (el as any).webkitRequestFullscreen?.()).catch(() => {});
       setFs(true);
     }
   }, [fs, setFs]);
