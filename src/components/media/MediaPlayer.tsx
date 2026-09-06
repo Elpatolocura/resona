@@ -115,7 +115,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
               right: 0,
               bottom: 0,
               width: '100vw',
-              height: '100vh',
+              height: '100dvh',
               borderRadius: 0,
               border: 'none',
               margin: 0,
@@ -138,7 +138,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                 allowFullScreen
                 referrerPolicy="origin"
-                className="h-full w-full border-0"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
                 onLoad={() => setLoaded(true)}
                 onError={() => setLoaded(true)}
               />
@@ -156,7 +156,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
           onClick={toggleFs}
           style={{
             position: 'fixed',
-            bottom: 80,
+            bottom: fs ? 20 : 80,
             right: 16,
             zIndex: 2147483647,
             width: 48,
