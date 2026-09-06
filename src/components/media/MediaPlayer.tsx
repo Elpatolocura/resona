@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Heart, Loader2, Play, Server } from 'lucide-react';
+import { ArrowLeft, Heart, Loader2, Maximize, Minimize, Play, Server } from 'lucide-react';
 import type { MediaVod } from '../../types';
 import { usePlayerStore } from '../../store/playerStore';
 import { useMediaStore } from '../../store/mediaStore';
@@ -23,6 +23,24 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
   const isFav = useMediaStore((s) => s.isVodFavorite(vod.id));
   const toggleVodFavorite = useMediaStore((s) => s.toggleVodFavorite);
   const [loaded, setLoaded] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+
+  const toggleFullscreen = useCallback(() => {
+    setPseudoFullscreen((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
+    if (!pseudoFullscreen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPseudoFullscreen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [pseudoFullscreen]);
 
   useEffect(() => {
     setLoaded(false);
@@ -36,7 +54,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className={cn('flex flex-wrap items-center justify-between gap-3', pseudoFullscreen && 'hidden')}>
         <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-4 py-2 text-sm font-semibold text-muted backdrop-blur transition hover:border-fuchsia-400/40 hover:text-fuchsia-300"
@@ -78,7 +96,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
         </div>
       </div>
 
-      {!isCurrent ? (
+      {!isCurrent && !pseudoFullscreen ? (
         <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 rounded-2xl border border-line bg-surface/60 p-8 text-center">
           <p className="text-lg font-bold text-text">
             {vodMediaTypeLabel(vod)}: {vod.title}
@@ -91,7 +109,14 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
           </button>
         </div>
       ) : (
-        <div className="relative aspect-video w-full rounded-2xl border border-line bg-black shadow-2xl shadow-black/50">
+        <div
+          className={cn(
+            'relative bg-black shadow-2xl shadow-black/50',
+            pseudoFullscreen
+              ? 'fixed inset-0 z-[200] h-screen w-screen'
+              : 'aspect-video w-full rounded-2xl border border-line',
+          )}
+        >
           {!loaded && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
               <Loader2 className="h-8 w-8 animate-spin text-fuchsia-300" />
@@ -106,7 +131,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
               allowFullScreen
               referrerPolicy="origin"
-              className="h-full w-full"
+              className="h-full w-full border-0"
               onLoad={() => setLoaded(true)}
               onError={() => setLoaded(true)}
             />
@@ -114,6 +139,15 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
             <div className="flex h-full w-full items-center justify-center">
               <p className="text-sm text-muted">Selecciona un servidor para ver el contenido.</p>
             </div>
+          )}
+          {loaded && videoUrl && (
+            <button
+              onClick={toggleFullscreen}
+              className="absolute bottom-3 right-3 z-20 rounded-lg bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80 hover:scale-110"
+              aria-label={pseudoFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            >
+              {pseudoFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+            </button>
           )}
         </div>
       )}
