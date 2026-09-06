@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, Loader2, Maximize, Minimize, Play, Server } from 'lucide-react';
@@ -25,18 +25,24 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
   const toggleVodFavorite = useMediaStore((s) => s.toggleVodFavorite);
   const [loaded, setLoaded] = useState(false);
   const [fs, setFs] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
 
-  const toggleFs = useCallback(() => setFs((p) => !p), []);
+  const toggleFs = useCallback(() => {
+    setFs((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     if (!fs) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs(false); };
     document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
+    const prevOverflow = document.body.style.overflow;
+    const prevPos = document.body.style.position;
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'relative';
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevOverflow;
+      document.body.style.position = prevPos;
     };
   }, [fs]);
 
@@ -48,35 +54,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
 
   const isCurrent = currentMedia?.id === vod.id;
 
-  const showBtn = loaded && videoUrl && isCurrent;
-
-  const fsBtn = showBtn ? createPortal(
-    <button
-      onClick={toggleFs}
-      style={{
-        position: 'fixed',
-        bottom: 20,
-        right: 20,
-        zIndex: 2147483647,
-        padding: 14,
-        borderRadius: 12,
-        background: 'rgba(0,0,0,0.65)',
-        color: '#fff',
-        border: 'none',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        touchAction: 'manipulation',
-      }}
-      aria-label={fs ? 'Salir de pantalla completa' : 'Pantalla completa'}
-    >
-      {fs ? <Minimize className="h-7 w-7" /> : <Maximize className="h-7 w-7" />}
-    </button>,
-    document.body,
-  ) : null;
+  const showBtn = loaded && !!videoUrl && isCurrent;
 
   return (
     <>
@@ -125,20 +103,26 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
           </div>
         ) : (
           <div
-            style={fs ? {
-              position: 'fixed',
-              inset: 0,
-              zIndex: 2147483647,
-              width: '100vw',
-              height: '100dvh',
-              borderRadius: 0,
-              border: 'none',
-              margin: 0,
-            } : undefined}
+            ref={boxRef}
             className={cn(
               'relative bg-black',
               !fs && 'aspect-video w-full rounded-2xl border border-line shadow-2xl shadow-black/50',
             )}
+            style={fs ? {
+              position: 'fixed' as const,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh',
+              borderRadius: 0,
+              border: 'none',
+              margin: 0,
+              padding: 0,
+              zIndex: 2147483647,
+              overflow: 'hidden',
+            } : undefined}
           >
             {!loaded && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
@@ -166,7 +150,35 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
           </div>
         )}
       </div>
-      {fsBtn}
+
+      {showBtn && createPortal(
+        <button
+          onClick={toggleFs}
+          style={{
+            position: 'fixed',
+            bottom: 80,
+            right: 16,
+            zIndex: 2147483647,
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            background: fs ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.6)',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            touchAction: 'manipulation',
+          }}
+          aria-label={fs ? 'Salir de pantalla completa' : 'Pantalla completa'}
+        >
+          {fs ? <Minimize size={22} /> : <Maximize size={22} />}
+        </button>,
+        document.body,
+      )}
     </>
   );
 }
