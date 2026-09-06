@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, Loader2, Maximize, Minimize, Play, Server } from 'lucide-react';
 import type { MediaVod } from '../../types';
@@ -23,134 +24,149 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
   const isFav = useMediaStore((s) => s.isVodFavorite(vod.id));
   const toggleVodFavorite = useMediaStore((s) => s.toggleVodFavorite);
   const [loaded, setLoaded] = useState(false);
-  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+  const [fs, setFs] = useState(false);
 
-  const toggleFullscreen = useCallback(() => {
-    setPseudoFullscreen((prev) => !prev);
-  }, []);
+  const toggleFs = useCallback(() => setFs((p) => !p), []);
 
   useEffect(() => {
-    if (!pseudoFullscreen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPseudoFullscreen(false);
-    };
-    document.addEventListener('keydown', handleKey);
+    if (!fs) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs(false); };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
-      document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
     };
-  }, [pseudoFullscreen]);
+  }, [fs]);
 
   useEffect(() => {
     setLoaded(false);
-    if (providers.length === 0) {
-      loadProviders(vod);
-    }
+    if (providers.length === 0) loadProviders(vod);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vod.id, vod.season, vod.episode]);
 
   const isCurrent = currentMedia?.id === vod.id;
 
-  return (
-    <div className="space-y-4">
-      <div className={cn('flex flex-wrap items-center justify-between gap-3', pseudoFullscreen && 'hidden')}>
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-4 py-2 text-sm font-semibold text-muted backdrop-blur transition hover:border-fuchsia-400/40 hover:text-fuchsia-300"
-        >
-          <ArrowLeft className="h-4 w-4" /> Volver
-        </button>
+  const showBtn = loaded && videoUrl && isCurrent;
 
-        <div className="flex min-w-0 items-center gap-2">
+  const fsBtn = showBtn ? createPortal(
+    <button
+      onClick={toggleFs}
+      style={{
+        position: 'fixed',
+        bottom: 20,
+        right: 20,
+        zIndex: 2147483647,
+        padding: 14,
+        borderRadius: 12,
+        background: 'rgba(0,0,0,0.65)',
+        color: '#fff',
+        border: 'none',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        touchAction: 'manipulation',
+      }}
+      aria-label={fs ? 'Salir de pantalla completa' : 'Pantalla completa'}
+    >
+      {fs ? <Minimize className="h-7 w-7" /> : <Maximize className="h-7 w-7" />}
+    </button>,
+    document.body,
+  ) : null;
+
+  return (
+    <>
+      <div className="space-y-4">
+        <div className={cn('flex flex-wrap items-center justify-between gap-3', fs && 'invisible')}>
           <button
-            onClick={() => {
-              toggleVodFavorite(vod);
-              toast(
-                isFav ? 'Quitado de favoritos' : 'Añadido a favoritos',
-                isFav ? 'info' : 'success',
-              );
-            }}
-            aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-4 py-2 text-sm font-semibold text-muted backdrop-blur transition hover:border-fuchsia-400/40 hover:text-fuchsia-300"
+          >
+            <ArrowLeft className="h-4 w-4" /> Volver
+          </button>
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              onClick={() => {
+                toggleVodFavorite(vod);
+                toast(isFav ? 'Quitado de favoritos' : 'Añadido a favoritos', isFav ? 'info' : 'success');
+              }}
+              aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              className="rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-text"
+            >
+              <Heart className={cn('h-5 w-5', isFav && 'fill-accent-2 text-accent-2')} />
+            </button>
+            {providers.length > 1 && (
+              <div className="flex items-center gap-2">
+                <Server className="h-4 w-4 text-muted" />
+                <Select
+                  value={videoUrl ?? ''}
+                  onChange={(value) => { setVideoUrl(value); useMediaStore.getState().selectProvider(value); }}
+                  ariaLabel="Servidor"
+                  options={providers.map((p) => ({ value: p.url, label: p.name }))}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {!isCurrent ? (
+          <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 rounded-2xl border border-line bg-surface/60 p-8 text-center">
+            <p className="text-lg font-bold text-text">{vodMediaTypeLabel(vod)}: {vod.title}</p>
+            <button
+              onClick={() => usePlayerStore.getState().playVideo(vod)}
+              className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-bold text-white shadow-xl shadow-fuchsia-500/30 transition hover:scale-[1.03] hover:opacity-90 active:scale-95"
+            >
+              <Play className="h-4.5 w-4.5 fill-current" /> Ver ahora
+            </button>
+          </div>
+        ) : (
+          <div
+            style={fs ? {
+              position: 'fixed',
+              inset: 0,
+              zIndex: 2147483647,
+              width: '100vw',
+              height: '100dvh',
+              borderRadius: 0,
+              border: 'none',
+              margin: 0,
+            } : undefined}
             className={cn(
-              'rounded-full p-2 text-muted transition hover:bg-surface-2 hover:text-text',
+              'relative bg-black',
+              !fs && 'aspect-video w-full rounded-2xl border border-line shadow-2xl shadow-black/50',
             )}
           >
-            <Heart className={cn('h-5 w-5', isFav && 'fill-accent-2 text-accent-2')} />
-          </button>
-
-          {providers.length > 1 && (
-            <div className="flex items-center gap-2">
-              <Server className="h-4 w-4 text-muted" />
-              <Select
-                value={videoUrl ?? ''}
-                onChange={(value) => {
-                  setVideoUrl(value);
-                  useMediaStore.getState().selectProvider(value);
-                }}
-                ariaLabel="Servidor"
-                options={providers.map((p) => ({ value: p.url, label: p.name }))}
+            {!loaded && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
+                <Loader2 className="h-8 w-8 animate-spin text-fuchsia-300" />
+                <p className="text-sm text-muted">Cargando reproductor…</p>
+              </div>
+            )}
+            {videoUrl ? (
+              <iframe
+                key={videoUrl}
+                src={videoUrl}
+                title={vod.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                allowFullScreen
+                referrerPolicy="origin"
+                className="h-full w-full border-0"
+                onLoad={() => setLoaded(true)}
+                onError={() => setLoaded(true)}
               />
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <p className="text-sm text-muted">Selecciona un servidor para ver el contenido.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
-      {!isCurrent && !pseudoFullscreen ? (
-        <div className="flex aspect-video w-full flex-col items-center justify-center gap-4 rounded-2xl border border-line bg-surface/60 p-8 text-center">
-          <p className="text-lg font-bold text-text">
-            {vodMediaTypeLabel(vod)}: {vod.title}
-          </p>
-          <button
-            onClick={() => usePlayerStore.getState().playVideo(vod)}
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-bold text-white shadow-xl shadow-fuchsia-500/30 transition hover:scale-[1.03] hover:opacity-90 active:scale-95"
-          >
-            <Play className="h-4.5 w-4.5 fill-current" /> Ver ahora
-          </button>
-        </div>
-      ) : (
-        <div
-          className={cn(
-            'relative bg-black shadow-2xl shadow-black/50',
-            pseudoFullscreen
-              ? 'fixed inset-0 z-[200] h-dvh w-screen'
-              : 'aspect-video w-full rounded-2xl border border-line',
-          )}
-        >
-          {!loaded && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black">
-              <Loader2 className="h-8 w-8 animate-spin text-fuchsia-300" />
-              <p className="text-sm text-muted">Cargando reproductor…</p>
-            </div>
-          )}
-          {videoUrl ? (
-            <iframe
-              key={videoUrl}
-              src={videoUrl}
-              title={vod.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-              allowFullScreen
-              referrerPolicy="origin"
-              className="h-full w-full border-0"
-              onLoad={() => setLoaded(true)}
-              onError={() => setLoaded(true)}
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <p className="text-sm text-muted">Selecciona un servidor para ver el contenido.</p>
-            </div>
-          )}
-          {loaded && videoUrl && (
-            <button
-              onClick={toggleFullscreen}
-              className="absolute bottom-3 right-3 z-20 rounded-lg bg-black/60 p-2.5 text-white backdrop-blur transition hover:bg-black/80 hover:scale-110 sm:p-2"
-              aria-label={pseudoFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-            >
-              {pseudoFullscreen ? <Minimize className="h-6 w-6 sm:h-5 sm:w-5" /> : <Maximize className="h-6 w-6 sm:h-5 sm:w-5" />}
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+      {fsBtn}
+    </>
   );
 }
