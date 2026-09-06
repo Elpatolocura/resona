@@ -113,7 +113,7 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
           className={cn(
             'relative bg-black shadow-2xl shadow-black/50',
             pseudoFullscreen
-              ? 'fixed inset-0 z-[200] h-screen w-screen'
+              ? 'fixed inset-0 z-[200] h-dvh w-screen'
               : 'aspect-video w-full rounded-2xl border border-line',
           )}
         >
@@ -143,10 +143,10 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
           {loaded && videoUrl && (
             <button
               onClick={toggleFullscreen}
-              className="absolute bottom-3 right-3 z-20 rounded-lg bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80 hover:scale-110"
+              className="absolute bottom-3 right-3 z-20 rounded-lg bg-black/60 p-2.5 text-white backdrop-blur transition hover:bg-black/80 hover:scale-110 sm:p-2"
               aria-label={pseudoFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
             >
-              {pseudoFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+              {pseudoFullscreen ? <Minimize className="h-6 w-6 sm:h-5 sm:w-5" /> : <Maximize className="h-6 w-6 sm:h-5 sm:w-5" />}
             </button>
           )}
         </div>
