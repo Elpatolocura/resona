@@ -28,6 +28,7 @@ export default function Player() {
   const prev = usePlayerStore((s) => s.prev);
   const seek = usePlayerStore((s) => s.seek);
   const toggleQueue = usePlayerStore((s) => s.toggleQueue);
+  const videoFullscreen = usePlayerStore((s) => s.videoFullscreen);
 
   const favorites = useLibraryStore((s) => s.favorites);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
@@ -108,6 +109,7 @@ export default function Player() {
   }, [currentMedia, art]);
 
   if (!currentMedia) return null;
+  if (videoFullscreen) return null;
 
   const handleFavorite = () => {
     if (currentMedia.kind === 'music') {

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useContent } from './ContentProvider';
 import { useAuthStore } from '../store/authStore';
+import { usePlayerStore } from '../store/playerStore';
 import { usePwaInstall } from '../hooks/usePwaInstall';
 import { cn } from '../utils/format';
 
@@ -52,6 +53,9 @@ export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const { canInstall, install } = usePwaInstall();
+  const videoFullscreen = usePlayerStore((s) => s.videoFullscreen);
+
+  if (videoFullscreen) return null;
 
   const isDisabled = (requires?: 'music' | 'movies' | 'series' | 'anime') => {
     if (!requires) return false;

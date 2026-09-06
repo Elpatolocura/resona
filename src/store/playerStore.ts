@@ -18,12 +18,14 @@ interface PlayerState {
   muted: boolean;
   showQueue: boolean;
   videoUrl: string | null;
+  videoFullscreen: boolean;
   playFrom: (tracks: AudiusTrack[], index?: number) => void;
   playTrack: (track: AudiusTrack) => void;
   playMedia: (media: Media) => void;
   playMediaList: (media: Media[], index?: number) => void;
   playVideo: (vod: MediaVod) => void;
   setVideoUrl: (url: string | null) => void;
+  setVideoFullscreen: (v: boolean) => void;
   togglePlay: () => void;
   next: () => void;
   prev: () => void;
@@ -139,6 +141,7 @@ export const usePlayerStore = create<PlayerState>()(
         muted: false,
         showQueue: false,
         videoUrl: null,
+        videoFullscreen: false,
 
         playFrom: (tracks, index = 0) => {
           get().playMediaList(tracks.map(trackToMedia), index);
@@ -160,6 +163,8 @@ export const usePlayerStore = create<PlayerState>()(
         },
 
         setVideoUrl: (url) => set({ videoUrl: url }),
+
+        setVideoFullscreen: (v) => set({ videoFullscreen: v }),
 
         togglePlay: () => {
           const { isPlaying, currentTrack } = get();

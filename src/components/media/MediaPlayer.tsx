@@ -24,27 +24,42 @@ export default function MediaPlayer({ vod }: MediaPlayerProps) {
   const isFav = useMediaStore((s) => s.isVodFavorite(vod.id));
   const toggleVodFavorite = useMediaStore((s) => s.toggleVodFavorite);
   const [loaded, setLoaded] = useState(false);
-  const [fs, setFs] = useState(false);
+  const fs = usePlayerStore((s) => s.videoFullscreen);
+  const setFs = usePlayerStore((s) => s.setVideoFullscreen);
   const boxRef = useRef<HTMLDivElement>(null);
 
   const toggleFs = useCallback(() => {
-    setFs((prev) => !prev);
-  }, []);
+    if (fs) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setFs(false);
+    } else {
+      const el = document.documentElement;
+      (el.requestFullscreen?.() || el.webkitRequestFullscreen?.()).catch(() => {});
+      setFs(true);
+    }
+  }, [fs, setFs]);
 
   useEffect(() => {
     if (!fs) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFs(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { document.exitFullscreen().catch(() => {}); setFs(false); } };
     document.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
-    const prevPos = document.body.style.position;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'relative';
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
-      document.body.style.position = prevPos;
     };
-  }, [fs]);
+  }, [fs, setFs]);
+
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement && fs) setFs(false);
+    };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, [fs, setFs]);
 
   useEffect(() => {
     setLoaded(false);
