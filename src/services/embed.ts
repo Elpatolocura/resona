@@ -52,27 +52,36 @@ const TEMPLATES: ProviderTemplate[] = [
   },
 ];
 
-function buildProviders(vod: MediaVod): EmbedProvider[] {
+function addLanguageParam(url: string, language: string): string {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}lang=${language}`;
+}
+
+function buildProviders(vod: MediaVod, language: string = 'es'): EmbedProvider[] {
   const isTv = vod.kind === 'tv' || vod.kind === 'anime';
   const season = isTv ? (vod.season ?? 1) : 1;
   const episode = isTv ? (vod.episode ?? 1) : 1;
-  return TEMPLATES.map((t) => ({
-    id: t.id,
-    name: t.name,
-    url: vod.kind === 'movie' ? t.movie(vod.tmdbId) : t.tv(vod.tmdbId, season, episode),
-  }));
+  return TEMPLATES.map((t) => {
+    let url = vod.kind === 'movie' ? t.movie(vod.tmdbId) : t.tv(vod.tmdbId, season, episode);
+    url = addLanguageParam(url, language);
+    return {
+      id: t.id,
+      name: t.name,
+      url,
+    };
+  });
 }
 
-export function getWatchProviders(vod: MediaVod): EmbedProvider[] {
-  return buildProviders(vod);
+export function getWatchProviders(vod: MediaVod, language: string = 'es'): EmbedProvider[] {
+  return buildProviders(vod, language);
 }
 
-export function getWatchUrl(vod: MediaVod): string {
-  return buildProviders(vod)[0].url;
+export function getWatchUrl(vod: MediaVod, language: string = 'es'): string {
+  return buildProviders(vod, language)[0].url;
 }
 
-export async function checkWorkingProviders(vod: MediaVod, timeoutMs = 6000): Promise<EmbedProvider[]> {
-  const providers = buildProviders(vod);
+export async function checkWorkingProviders(vod: MediaVod, timeoutMs = 6000, language: string = 'es'): Promise<EmbedProvider[]> {
+  const providers = buildProviders(vod, language);
   const results = await Promise.all(
     providers.map(async (p) => {
       try {
@@ -90,7 +99,7 @@ export async function checkWorkingProviders(vod: MediaVod, timeoutMs = 6000): Pr
   return working.length > 0 ? working : providers;
 }
 
-export async function getFirstWorkingWatchUrl(vod: MediaVod): Promise<string> {
-  const providers = await checkWorkingProviders(vod);
+export async function getFirstWorkingWatchUrl(vod: MediaVod, language: string = 'es'): Promise<string> {
+  const providers = await checkWorkingProviders(vod, 6000, language);
   return providers[0].url;
 }
