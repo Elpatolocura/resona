@@ -291,6 +291,19 @@ export const tmdb = {
     return items;
   },
 
+  async detailsById(id: number): Promise<MediaVod> {
+    try {
+      const movieResult = await this.details('movie', id);
+      // If movie result has no year, it likely doesn't exist - try TV
+      if (!movieResult.year) {
+        return await this.details('tv', id);
+      }
+      return movieResult;
+    } catch {
+      return await this.details('tv', id);
+    }
+  },
+
   async details(kind: TmdbKind, id: number): Promise<MediaVod> {
     const [data, credits] = await Promise.all([
       request<Record<string, unknown> & { id: number }>(`/${kind}/${id}`),

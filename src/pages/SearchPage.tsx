@@ -14,6 +14,7 @@ import MediaGrid from '../components/media/MediaGrid';
 import EmptyState from '../components/EmptyState';
 import ErrorState from '../components/ErrorState';
 import type { AudiusTrack } from '../types';
+import type { MediaVod } from '../types/index';
 
 const SUGGESTIONS = [
   'electronic',
@@ -27,6 +28,14 @@ const SUGGESTIONS = [
   'r&b',
   'techno',
 ];
+
+function isIdInput(input: string): boolean {
+  const trimmed = input.trim();
+  if (!trimmed) return false;
+  if (/^movie:\d+$/.test(trimmed) || /^tv:\d+$/.test(trimmed)) return true;
+  if (/^\d{3,10}$/.test(trimmed)) return true;
+  return false;
+}
 
 export default function SearchPage() {
   const [params, setParams] = useSearchParams();
@@ -51,7 +60,7 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced]);
 
-  const active = query.trim().length >= 2;
+const active = query.trim().length >= 2 || isIdInput(query);
 
   const tracks = useApi(
     () => (active ? audius.searchTracks(query.trim()) : Promise.resolve([])),
@@ -66,16 +75,29 @@ export default function SearchPage() {
     [query],
   );
   const mediaResults = useApi(
-    () => (active ? tmdb.searchMulti(query.trim()) : Promise.resolve([])),
+    () => {
+      let id: number | undefined;
+      if (isIdInput(query)) {
+        const trimmed = query.trim();
+        if (/^movie:\d+$/.test(trimmed) || /^tv:\d+$/.test(trimmed)) {
+          id = Number(trimmed.replace(/^(movie|tv):/, ''));
+        } else {
+          id = Number(trimmed);
+        }
+      }
+      if (id) {
+        return tmdb.detailsById(id).then((item) => [item]);
+      }
+      return tmdb.searchMulti(query.trim());
+    },
     [query],
   );
 
   const albums = (collections.data ?? []).filter((c) => c.is_album);
   const playlists = (collections.data ?? []).filter((c) => !c.is_album);
-  const mediaItems = mediaResults.data ?? [];
-  const movieResults = mediaItems.filter((m) => m.kind === 'movie');
-  const tvResults = mediaItems.filter((m) => m.kind === 'tv');
-  const animeResults = mediaItems.filter((m) => m.kind === 'anime');
+  const movieResults = mediaResults.data?.filter((m) => m.kind === 'movie') ?? [];
+  const tvResults = mediaResults.data?.filter((m) => m.kind === 'tv') ?? [];
+  const animeResults = mediaResults.data?.filter((m) => m.kind === 'anime') ?? [];
 
   const playSearch = (index: number, track: AudiusTrack) => {
     usePlayerStore.getState().playFrom(tracks.data ?? [], index);
