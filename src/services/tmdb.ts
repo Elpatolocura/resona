@@ -294,6 +294,10 @@ export const tmdb = {
   async detailsById(id: number): Promise<MediaVod> {
     try {
       const movieResult = await this.details('movie', id);
+      // Filter by Spanish language - if movie is not Spanish, try TV
+      if (movieResult.originalLanguage && movieResult.originalLanguage !== 'es') {
+        return await this.details('tv', id);
+      }
       // If movie result has no year, it likely doesn't exist - try TV
       if (!movieResult.year) {
         return await this.details('tv', id);
